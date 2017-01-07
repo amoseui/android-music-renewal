@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "com.amoseui.music"
-        minSdkVersion 8
+        minSdkVersion 9
         targetSdkVersion 25
         versionCode 1
         versionName "0.0.1"
@@ -19,4 +19,8 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
+}
+
+dependencies {
+    compile 'com.android.support:support-v4:25.1.0'
 }

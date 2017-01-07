@@ -16,17 +16,22 @@
 
 package com.amoseui.music;
 
-import com.amoseui.music.MusicUtils.ServiceToken;
-
+import android.Manifest;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 
-public class MusicBrowserActivity extends Activity
-    implements MusicUtils.Defs {
+import com.amoseui.music.MusicUtils.ServiceToken;
+
+public class MusicBrowserActivity extends Activity implements MusicUtils.Defs {
+
+    private final int PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE = 0;
 
     private ServiceToken mToken;
 
@@ -39,19 +44,7 @@ public class MusicBrowserActivity extends Activity
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
-        int activeTab = MusicUtils.getIntPref(this, "activetab", R.id.artisttab);
-        if (activeTab != R.id.artisttab
-                && activeTab != R.id.albumtab
-                && activeTab != R.id.songtab
-                && activeTab != R.id.playlisttab) {
-            activeTab = R.id.artisttab;
-        }
-        MusicUtils.activateTab(this, activeTab);
-        
-        String shuf = getIntent().getStringExtra("autoshuffle");
-        if ("true".equals(shuf)) {
-            mToken = MusicUtils.bindToService(this, autoshuffle);
-        }
+        requestRuntimePermission();
     }
 
     @Override
@@ -82,5 +75,49 @@ public class MusicBrowserActivity extends Activity
         }
     };
 
+    private void requestRuntimePermission() {
+        int permissionCheck =
+                ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE);
+        } else {
+            startService();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    startService();
+                } else {
+                    finish();
+                }
+                return;
+            }
+        }
+    }
+
+    private void startService() {
+        int activeTab = MusicUtils.getIntPref(this, "activetab", R.id.artisttab);
+        if (activeTab != R.id.artisttab
+                && activeTab != R.id.albumtab
+                && activeTab != R.id.songtab
+                && activeTab != R.id.playlisttab) {
+            activeTab = R.id.artisttab;
+        }
+        MusicUtils.activateTab(this, activeTab);
+
+        String shuf = getIntent().getStringExtra("autoshuffle");
+        if ("true".equals(shuf)) {
+            mToken = MusicUtils.bindToService(this, autoshuffle);
+        }
+    }
 }
 
