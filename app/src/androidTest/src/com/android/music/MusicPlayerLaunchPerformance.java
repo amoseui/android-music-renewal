@@ -37,7 +37,7 @@ public class MusicPlayerLaunchPerformance extends LaunchPerformanceBase {
     public void onCreate(Bundle arguments) {
         super.onCreate(arguments);
 
-        mIntent.setClassName(getTargetContext(), "com.android.music.MusicBrowserActivity");
+        mIntent.setClassName(getTargetContext(), "MusicBrowserActivity");
         start();
     }
 
