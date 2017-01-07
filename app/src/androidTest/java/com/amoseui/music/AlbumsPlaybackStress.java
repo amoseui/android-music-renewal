@@ -13,23 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.music.tests.stress;
+package com.amoseui.music;
 
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Instrumentation;
-import android.app.Instrumentation.ActivityMonitor;
 import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
-import android.os.SystemClock;
 import android.test.ActivityInstrumentationTestCase;
 import android.test.suitebuilder.annotation.LargeTest;
-import android.view.KeyEvent;
 import android.util.Log;
-
-import com.android.music.AlbumBrowserActivity;
-import com.android.music.tests.MusicPlayerNames;
+import android.view.KeyEvent;
 
 public class AlbumsPlaybackStress extends ActivityInstrumentationTestCase <AlbumBrowserActivity>{
   

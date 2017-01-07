@@ -14,33 +14,27 @@
  * limitations under the License.
  */
 
-package com.android.music.tests.functional;
+package com.amoseui.music;
 
-import android.app.Activity;
-import android.content.*;
 import android.app.Instrumentation;
+import android.content.ContentResolver;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.test.ActivityInstrumentationTestCase;
 import android.test.suitebuilder.annotation.LargeTest;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.net.Uri;
-import android.os.Environment;
-import android.provider.MediaStore;
-import android.content.ContentResolver;
-import android.content.pm.ActivityInfo;
-import android.database.Cursor;
-import android.content.Intent;
-import android.content.BroadcastReceiver;
-import android.content.IntentFilter;
 
-import com.android.music.CreatePlaylist;
-import com.android.music.TrackBrowserActivity;
-import com.android.music.MusicUtils;
-
-import com.android.music.tests.MusicPlayerNames;
-
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * Junit / Instrumentation test case for the TrackBrowserActivity

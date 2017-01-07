@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.music.tests;
+package com.amoseui.music;
 
 import android.app.Instrumentation;
-import com.android.music.TrackBrowserActivity;
-import android.view.KeyEvent;
-import android.widget.ListView;
-
 import android.test.ActivityInstrumentationTestCase2;
 import android.test.suitebuilder.annotation.LargeTest;
+import android.view.KeyEvent;
+import android.widget.ListView;
 
 /**
  * Junit / Instrumentation test case for the Music Player

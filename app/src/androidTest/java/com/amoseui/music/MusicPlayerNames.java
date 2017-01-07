@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.music.tests;
+package com.amoseui.music;
 
 import android.os.Environment;
 

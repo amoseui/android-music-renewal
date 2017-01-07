@@ -13,26 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.music.tests.stress;
+package com.amoseui.music;
 
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Instrumentation;
 import android.app.Instrumentation.ActivityMonitor;
-import android.content.Intent;
-import android.os.Bundle;
-import android.os.SystemClock;
+import android.content.Context;
 import android.test.ActivityInstrumentationTestCase;
 import android.test.suitebuilder.annotation.LargeTest;
-import android.view.KeyEvent;
 import android.util.Log;
-import android.content.Context;
-
-
-import com.android.music.MusicBrowserActivity;
-import com.android.music.MusicUtils;
-import com.android.music.TrackBrowserActivity;
-import com.android.music.tests.MusicPlayerNames;
+import android.view.KeyEvent;
 
 public class MusicPlaybackStress extends ActivityInstrumentationTestCase <TrackBrowserActivity>{
     private static String TAG = "mediaplayertests";

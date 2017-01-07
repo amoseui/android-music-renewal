@@ -14,27 +14,18 @@
  * limitations under the License.
  */
 
-package com.android.music.tests.functional;
+package com.amoseui.music;
 
 import android.app.Activity;
-import android.content.*;
 import android.app.Instrumentation;
 import android.app.Instrumentation.ActivityMonitor;
+import android.content.ContentResolver;
 import android.content.Intent;
+import android.database.Cursor;
+import android.provider.MediaStore;
 import android.test.ActivityInstrumentationTestCase;
 import android.test.suitebuilder.annotation.LargeTest;
 import android.view.KeyEvent;
-import android.provider.MediaStore;
-import android.content.ContentResolver;
-import android.database.Cursor;
-
-import com.android.music.CreatePlaylist;
-import com.android.music.MusicUtils;
-import com.android.music.PlaylistBrowserActivity;
-import com.android.music.TrackBrowserActivity;
-
-import com.android.music.tests.MusicPlayerNames;
-import com.android.music.tests.functional.TestSongs;
 
 /**
  * Junit / Instrumentation test case for the PlaylistBrowserActivity
