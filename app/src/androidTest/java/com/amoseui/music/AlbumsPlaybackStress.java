@@ -13,73 +13,68 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.amoseui.music;
 
-import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Instrumentation;
 import android.content.Context;
-import android.test.ActivityInstrumentationTestCase;
-import android.test.suitebuilder.annotation.LargeTest;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
 import android.util.Log;
 import android.view.KeyEvent;
 
-public class AlbumsPlaybackStress extends ActivityInstrumentationTestCase <AlbumBrowserActivity>{
-  
-  private Activity browseActivity;
-  private String[] testing;
-  private String TAG = "AlbumsPlaybackStress";
-  
-  public AlbumsPlaybackStress() {
-      super("com.android.music",AlbumBrowserActivity.class);
-  }
-  
-  @Override 
-  protected void setUp() throws Exception { 
-      super.setUp(); 
-  }
-  
-  @Override 
-  protected void tearDown() throws Exception {   
-      super.tearDown();           
-  }
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
-  /*
-   * Test case: Keeps launching music playback from Albums and then go 
-   * back to the album screen
-   * Verification: Check if it is in low memory
-   * The test depends on the test media in the sdcard
-   */
-    @LargeTest
-    public void testAlbumPlay() { 
-      Instrumentation inst = getInstrumentation();
-      try{
-        inst.sendKeyDownUpSync(KeyEvent.KEYCODE_DPAD_RIGHT);
-        inst.sendKeyDownUpSync(KeyEvent.KEYCODE_DPAD_RIGHT);
-        inst.sendKeyDownUpSync(KeyEvent.KEYCODE_DPAD_CENTER);
-        inst.sendKeyDownUpSync(KeyEvent.KEYCODE_DPAD_CENTER);
-        inst.sendKeyDownUpSync(KeyEvent.KEYCODE_DPAD_CENTER);
-        Thread.sleep(MusicPlayerNames.WAIT_LONG_TIME);
+import static android.support.test.InstrumentationRegistry.getInstrumentation;
+import static org.junit.Assert.assertFalse;
+
+@RunWith(AndroidJUnit4.class)
+public class AlbumsPlaybackStress {
+
+    private String TAG = "AlbumsPlaybackStress";
+
+    @Rule
+    public ActivityTestRule<AlbumBrowserActivity> mActivityRule =
+            new ActivityTestRule<>(AlbumBrowserActivity.class);
+
+    /**
+     * Test case: Keeps launching music playback from Albums and then go
+     * back to the album screen
+     * Verification: Check if it is in low memory
+     * The test depends on the test media in the sdcard
+     */
+    @Test
+    public void testAlbumPlay() {
+        Instrumentation inst = getInstrumentation();
+        try {
+            inst.sendKeyDownUpSync(KeyEvent.KEYCODE_DPAD_RIGHT);
+            inst.sendKeyDownUpSync(KeyEvent.KEYCODE_DPAD_RIGHT);
+            inst.sendKeyDownUpSync(KeyEvent.KEYCODE_DPAD_CENTER);
+            inst.sendKeyDownUpSync(KeyEvent.KEYCODE_DPAD_CENTER);
+            inst.sendKeyDownUpSync(KeyEvent.KEYCODE_DPAD_CENTER);
+            Thread.sleep(MusicPlayerNames.WAIT_LONG_TIME);
+            inst.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
+            inst.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
+            for (int i = 0; i < MusicPlayerNames.NO_ALBUMS_TOBE_PLAYED; i++) {
+                inst.sendKeyDownUpSync(KeyEvent.KEYCODE_DPAD_DOWN);
+                inst.sendKeyDownUpSync(KeyEvent.KEYCODE_DPAD_CENTER);
+                inst.sendKeyDownUpSync(KeyEvent.KEYCODE_DPAD_CENTER);
+                Thread.sleep(MusicPlayerNames.WAIT_LONG_TIME);
+                inst.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
+                inst.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
+            }
+        } catch (Exception e) {
+            Log.v(TAG, e.toString());
+        }
         inst.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
-        inst.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);     
-        for(int i=0; i< MusicPlayerNames.NO_ALBUMS_TOBE_PLAYED; i++){
-          inst.sendKeyDownUpSync(KeyEvent.KEYCODE_DPAD_DOWN);
-          inst.sendKeyDownUpSync(KeyEvent.KEYCODE_DPAD_CENTER);
-          inst.sendKeyDownUpSync(KeyEvent.KEYCODE_DPAD_CENTER);
-          Thread.sleep(MusicPlayerNames.WAIT_LONG_TIME);
-          inst.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
-          inst.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);       
-        } 
-      }catch (Exception e){
-          Log.v(TAG, e.toString());
-      }
-      inst.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
-    
-      //Verification: check if it is in low memory
-      ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
-      ((ActivityManager)getActivity().getSystemService(Context.ACTIVITY_SERVICE)).getMemoryInfo(mi);
-      assertFalse(TAG, mi.lowMemory); 
-     
-   
-  }
+
+        //Verification: check if it is in low memory
+        ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+        ((ActivityManager) mActivityRule.getActivity().getSystemService(Context.ACTIVITY_SERVICE))
+                .getMemoryInfo(mi);
+        assertFalse(TAG, mi.lowMemory);
+    }
 }

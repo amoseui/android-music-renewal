@@ -17,34 +17,30 @@
 package com.amoseui.music;
 
 import android.app.Instrumentation;
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.suitebuilder.annotation.LargeTest;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
 import android.view.KeyEvent;
 import android.widget.ListView;
+
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import static android.support.test.InstrumentationRegistry.getInstrumentation;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Junit / Instrumentation test case for the Music Player
  */
+@RunWith(AndroidJUnit4.class)
+public class MusicPlayerStability {
 
-public class MusicPlayerStability extends ActivityInstrumentationTestCase2 <TrackBrowserActivity>{
-    private static String TAG = "musicplayerstability";
     private static int PLAY_TIME = 30000;
     private ListView mTrackList;
 
-    public MusicPlayerStability() {
-        super("com.android.music",TrackBrowserActivity.class);
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        getActivity();
-        super.setUp();
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
+    @Rule
+    public ActivityTestRule<TrackBrowserActivity> mActivityRule =
+            new ActivityTestRule<>(TrackBrowserActivity.class);
 
     /**
      * Test case 1: This test case is for the power and general stability
@@ -52,7 +48,7 @@ public class MusicPlayerStability extends ActivityInstrumentationTestCase2 <Trac
      * play the mp3 for 30 seconds then stop.
      * The sdcard should have the target mp3 files.
      */
-    @LargeTest
+    @Test
     public void testPlay30sMP3() throws Exception {
         // Launch the songs list. Pick the fisrt song and play
         try {
@@ -60,7 +56,7 @@ public class MusicPlayerStability extends ActivityInstrumentationTestCase2 <Trac
             //Make sure the song list shown up
             Thread.sleep(2000);
             inst.sendKeyDownUpSync(KeyEvent.KEYCODE_DPAD_DOWN);
-            mTrackList = getActivity().getListView();
+            mTrackList = mActivityRule.getActivity().getListView();
             int scrollCount = mTrackList.getMaxScrollAmount();
             //Make sure there is at least one song in the sdcard
             if (scrollCount != -1) {
@@ -74,7 +70,7 @@ public class MusicPlayerStability extends ActivityInstrumentationTestCase2 <Trac
         }
     }
 
-    @LargeTest
+    @Test
     public void testLaunchMusicPlayer() throws Exception {
         // Launch music player and sleep for 30 seconds to capture
         // the music player power usage base line.

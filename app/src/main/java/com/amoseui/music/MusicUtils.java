@@ -821,7 +821,7 @@ public class MusicUtils {
             sService.play();
         } catch (RemoteException ex) {
         } finally {
-            Intent intent = new Intent("com.android.music.PLAYBACK_VIEWER")
+            Intent intent = new Intent("com.amoseui.music.PLAYBACK_VIEWER")
                 .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             context.startActivity(intent);
         }

@@ -23,32 +23,31 @@ import android.content.ContentResolver;
 import android.content.Intent;
 import android.database.Cursor;
 import android.provider.MediaStore;
-import android.test.ActivityInstrumentationTestCase;
-import android.test.suitebuilder.annotation.LargeTest;
+import android.support.test.rule.ActivityTestRule;
+import android.support.test.runner.AndroidJUnit4;
 import android.view.KeyEvent;
+
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import static android.support.test.InstrumentationRegistry.getInstrumentation;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Junit / Instrumentation test case for the PlaylistBrowserActivity
  * This test case need to run in the landscape mode and opened keyboard
- 
  */
-public class TestPlaylist extends ActivityInstrumentationTestCase <PlaylistBrowserActivity>{
-    private static String TAG = "musicplayertests";
-  
-    public TestPlaylist() {
-        super("com.android.music",PlaylistBrowserActivity.class);
-    }
+@RunWith(AndroidJUnit4.class)
+public class TestPlaylist {
 
-    @Override 
-    protected void setUp() throws Exception {   
-        super.setUp(); 
-    }
-    
-    @Override 
-    protected void tearDown() throws Exception {   
-        super.tearDown();           
-    }
-    
+    private static String TAG = "TestPlaylist";
+
+    @Rule
+    public ActivityTestRule<PlaylistBrowserActivity> mActivityRule =
+            new ActivityTestRule<>(PlaylistBrowserActivity.class);
     
     private void clearSearchString(int length){
         Instrumentation inst = getInstrumentation();
@@ -63,7 +62,8 @@ public class TestPlaylist extends ActivityInstrumentationTestCase <PlaylistBrows
         inst.sendStringSync(playlistname);
         Thread.sleep(MusicPlayerNames.WAIT_SHORT_TIME);
         inst.sendKeyDownUpSync(KeyEvent.KEYCODE_DPAD_DOWN);       
-        inst.invokeContextMenuAction(getActivity(), MusicUtils.Defs.CHILD_MENU_BASE + 1, 0);
+        inst.invokeContextMenuAction(
+                mActivityRule.getActivity(), MusicUtils.Defs.CHILD_MENU_BASE + 1, 0);
         Thread.sleep(MusicPlayerNames.WAIT_SHORT_TIME);
         clearSearchString(playlistname.length());
         
@@ -79,8 +79,8 @@ public class TestPlaylist extends ActivityInstrumentationTestCase <PlaylistBrows
                 null, false);
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_PICK);
-        intent.setClassName("com.android.music", "TrackBrowserActivity");
-        getActivity().startActivity(intent);     
+        intent.setClassName("com.amoseui.music", "TrackBrowserActivity");
+        mActivityRule.getActivity().startActivity(intent);
         Thread.sleep(MusicPlayerNames.WAIT_LONG_TIME);
         trackBrowserActivity = trackBrowserMon.waitForActivityWithTimeout(2000);
         inst.invokeContextMenuAction(trackBrowserActivity, MusicUtils.Defs.NEW_PLAYLIST, 0);
@@ -104,7 +104,8 @@ public class TestPlaylist extends ActivityInstrumentationTestCase <PlaylistBrows
         inst.sendStringSync(oldPlaylistName);
         Thread.sleep(MusicPlayerNames.WAIT_SHORT_TIME);
         inst.sendKeyDownUpSync(KeyEvent.KEYCODE_DPAD_DOWN);       
-        inst.invokeContextMenuAction(getActivity(), MusicUtils.Defs.CHILD_MENU_BASE + 3, 0);
+        inst.invokeContextMenuAction(
+                mActivityRule.getActivity(), MusicUtils.Defs.CHILD_MENU_BASE + 3, 0);
         Thread.sleep(MusicPlayerNames.WAIT_SHORT_TIME);
         //Remove the old playlist name
         clearSearchString(oldPlaylistName.length());
@@ -121,7 +122,7 @@ public class TestPlaylist extends ActivityInstrumentationTestCase <PlaylistBrows
         String[] cols = new String[] {
                 MediaStore.Audio.Playlists.NAME
         };
-        ContentResolver resolver = getActivity().getContentResolver();
+        ContentResolver resolver = mActivityRule.getActivity().getContentResolver();
         if (resolver == null) {
             System.out.println("resolver = null");
             assertNull(TAG, resolver);
@@ -139,7 +140,7 @@ public class TestPlaylist extends ActivityInstrumentationTestCase <PlaylistBrows
      * Test case 1: Add a playlist and delet the playlist just added.
      * Verification: The mediastore playlist should be empty
      */
-    @LargeTest
+    @Test
     public void testDeletePlaylist() throws Exception{
         boolean isEmptyPlaylist = true;
         addNewPlaylist(MusicPlayerNames.DELETE_PLAYLIST_NAME);
@@ -152,7 +153,7 @@ public class TestPlaylist extends ActivityInstrumentationTestCase <PlaylistBrows
      * Test case 2: Add playlist and rename the playlist just added.
      * Verification: The mediastore playlist should contain the updated name.
      */
-    @LargeTest
+    @Test
     public void testRenamePlaylist() throws Exception{
         boolean isEmptyPlaylist = true;
         addNewPlaylist(MusicPlayerNames.ORIGINAL_PLAYLIST_NAME);
