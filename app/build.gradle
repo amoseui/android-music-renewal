@@ -20,6 +20,10 @@ android {
         }
     }
 
+    lintOptions {
+        abortOnError false
+    }
+
     task grantPermissions << {
         def adb = android.getAdbExe().toString()
         "${adb} shell pm grant com.amoseui.music android.permission.READ_EXTERNAL_STORAGE".execute()
