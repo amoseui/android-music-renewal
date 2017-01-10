@@ -119,5 +119,9 @@ public class MusicBrowserActivity extends Activity implements MusicUtils.Defs {
             mToken = MusicUtils.bindToService(this, autoshuffle);
         }
     }
+
+    public static boolean method() {
+        return true;
+    }
 }
 

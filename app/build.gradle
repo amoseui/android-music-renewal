@@ -1,5 +1,8 @@
 apply plugin: 'com.android.application'
 
+apply plugin: 'com.github.kt3k.coveralls'
+apply plugin: 'jacoco'
+
 android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
@@ -67,4 +70,37 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     androidTestCompile 'com.android.support.test.uiautomator:uiautomator-v18:2.1.2'
+}
+
+jacoco {
+    toolVersion = "0.7.7.201606060606"
+}
+
+task jacocoTestReport(type: JacocoReport, dependsOn: "testDebugUnitTest") {
+    group = "Reporting"
+    description = "Generate Jacoco coverage reports"
+    classDirectories = fileTree(
+            dir: 'build/intermediates/classes/debug',
+            excludes: [
+                    '**/R.class',
+                    '**/R$*.class',
+                    '**/BuildConfig.*',
+                    '**/Manifest*.*',
+                    '**/*$ViewInjector*.*',
+                    '**/*$ViewBinder*.*',
+                    '**/*MembersInjector*.*',
+                    '**/*$Lambda$*.class',
+                    '**/*Factory*.class',
+                    '**/*$Builder*',
+                    '**/*DaggerApplicationComponent*.class',
+            ])
+    def coverageSourceDirs = ['src/main/java']
+    additionalSourceDirs = files(coverageSourceDirs)
+    sourceDirectories = files(coverageSourceDirs)
+    executionData = files(["${buildDir}/jacoco/testDebugUnitTest.exec"])
+    reports {
+        html.enabled = true
+        xml.enabled = true
+        xml.destination = "${buildDir}/reports/jacoco/test/jacocoTestReport.xml"
+    }
 }
