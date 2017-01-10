@@ -17,8 +17,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
         package="com.amoseui.music">
 
-    <original-package android:name="com.amoseui.music" />
-    <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="24"/>
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -30,8 +28,7 @@
     <application android:icon="@drawable/app_music"
         android:label="@string/musicbrowserlabel"
         android:taskAffinity="android.task.music"
-        android:allowTaskReparenting="true"
-        android:usesCleartextTraffic="true">
+        android:allowTaskReparenting="true">
         <meta-data
             android:name="android.app.default_searchable"
             android:value="com.amoseui.music.QueryBrowserActivity"
@@ -138,13 +135,6 @@
                 <data android:mimeType="vnd.android.cursor.dir/album"/>
             </intent-filter>
         </activity>
-        <activity android:name="com.amoseui.music.NowPlayingActivity" android:exported="false" >
-            <intent-filter>
-                <action android:name="android.intent.action.PICK" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="vnd.android.cursor.dir/nowplaying"/>
-            </intent-filter>
-        </activity>
         <activity android:name="com.amoseui.music.TrackBrowserActivity" android:exported="false" >
             <intent-filter>
                 <action android:name="android.intent.action.EDIT" />
@@ -202,37 +192,9 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="vnd.android.cursor.dir/video"/>
             </intent-filter>
-<!--
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
--->
         </activity>
         <activity android:name="com.amoseui.music.MediaPickerActivity"
                 android:label="@string/mediapickerlabel" android:exported="false" >
-<!--
-            <intent-filter>
-                <action android:name="android.intent.action.PICK" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="media/*"/>
-                <data android:mimeType="audio/*"/>
-                <data android:mimeType="application/ogg"/>
-                <data android:mimeType="application/x-ogg"/>
-                <data android:mimeType="video/*"/>
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.GET_CONTENT" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.OPENABLE" />
-                <data android:mimeType="media/*"/>
-                <data android:mimeType="audio/*"/>
-                <data android:mimeType="application/ogg"/>
-                <data android:mimeType="application/x-ogg"/>
-                <data android:mimeType="video/*"/>
-            </intent-filter>
--->
         </activity>
         <activity android:name="com.amoseui.music.MusicPicker"
                 android:label="@string/music_picker_title" android:exported="true" >
