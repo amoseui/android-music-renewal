@@ -17,19 +17,25 @@
 package com.amoseui.music;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.ViewPager;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 
 import com.amoseui.music.MusicUtils.ServiceToken;
 
-public class MusicBrowserActivity extends Activity implements MusicUtils.Defs {
+public class MusicBrowserActivity extends AppCompatActivity {
+
+    MusicBrowserPagerAdapter mMusicBrowserPagerAdapter;
+    ViewPager mViewPager;
 
     private final int PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE = 0;
 
@@ -44,7 +50,18 @@ public class MusicBrowserActivity extends Activity implements MusicUtils.Defs {
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
-        requestRuntimePermission();
+        setContentView(R.layout.music_browser_activity);
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.music_browser_toolbar);
+        setSupportActionBar(toolbar);
+
+        mMusicBrowserPagerAdapter = new MusicBrowserPagerAdapter(getSupportFragmentManager());
+        mViewPager = (ViewPager) findViewById(R.id.music_browser_pager);
+        mViewPager.setAdapter(mMusicBrowserPagerAdapter);
+
+        TabLayout tabLayout = (TabLayout) findViewById(R.id.music_browser_tabs);
+        tabLayout.setupWithViewPager(mViewPager);
+        // requestRuntimePermission();
     }
 
     @Override
