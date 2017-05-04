@@ -23,8 +23,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.media.AudioManager.OnAudioFocusChangeListener;
+import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.media.MediaPlayer.OnErrorListener;
 import android.media.MediaPlayer.OnPreparedListener;
@@ -43,8 +43,8 @@ import android.view.Window;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
-import android.widget.TextView;
 import android.widget.SeekBar.OnSeekBarChangeListener;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -71,8 +71,8 @@ public class AudioPreview extends Activity implements OnPreparedListener, OnErro
     private boolean mPausedByTransientLossOfFocus;
 
     @Override
-    public void onCreate(Bundle icicle) {
-        super.onCreate(icicle);
+    public void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
         
         Intent intent = getIntent();
         if (intent == null) {
@@ -165,7 +165,7 @@ public class AudioPreview extends Activity implements OnPreparedListener, OnErro
         };
 
         if (scheme.equals(ContentResolver.SCHEME_CONTENT)) {
-            if (mUri.getAuthority() == MediaStore.AUTHORITY) {
+            if (mUri.getAuthority().equals(MediaStore.AUTHORITY)) {
                 // try to get title and artist from the media content provider
                 mAsyncQueryHandler.startQuery(0, null, mUri, new String [] {
                         MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.ARTIST},
@@ -323,7 +323,7 @@ public class AudioPreview extends Activity implements OnPreparedListener, OnErro
         }
     }
 
-    class ProgressRefresher implements Runnable {
+    private class ProgressRefresher implements Runnable {
 
         @Override
         public void run() {
@@ -465,7 +465,7 @@ public class AudioPreview extends Activity implements OnPreparedListener, OnErro
             setOnCompletionListener(mActivity);
         }
 
-        public void setDataSourceAndPrepare(Uri uri) throws IllegalArgumentException,
+        private void setDataSourceAndPrepare(Uri uri) throws IllegalArgumentException,
                         SecurityException, IllegalStateException, IOException {
             setDataSource(mActivity,uri);
             prepareAsync();

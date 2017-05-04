@@ -22,15 +22,16 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Button;
+
+import com.amoseui.music.utils.MusicUtils;
 
 public class WeekSelector extends Activity
 {
     VerticalTextSpinner mWeeks;
 
     @Override
-    public void onCreate(Bundle icicle) {
-        super.onCreate(icicle);
+    public void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -43,13 +44,12 @@ public class WeekSelector extends Activity
         mWeeks.setWrapAround(false);
         mWeeks.setScrollInterval(200);
         
-        int def = MusicUtils.getIntPref(this, "numweeks", 2); 
-        int pos = icicle != null ? icicle.getInt("numweeks", def - 1) : def - 1;
+        int def = MusicUtils.getIntPref(this, "numweeks", 2);
+        int pos = bundle != null ? bundle.getInt("numweeks", def - 1) : def - 1;
         mWeeks.setSelectedPos(pos);
-        
-        ((Button) findViewById(R.id.set)).setOnClickListener(mListener);
-        
-        ((Button) findViewById(R.id.cancel)).setOnClickListener(new View.OnClickListener() {
+
+        findViewById(R.id.set).setOnClickListener(mListener);
+        findViewById(R.id.cancel).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 setResult(RESULT_CANCELED);
                 finish();

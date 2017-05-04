@@ -28,17 +28,19 @@ import android.view.View;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 
-public class VideoBrowserActivity extends ListActivity implements MusicUtils.Defs
-{
-    public VideoBrowserActivity()
-    {
+import com.amoseui.music.utils.MusicUtils;
+
+public class VideoBrowserActivity extends ListActivity
+        implements MusicUtils.Defs {
+
+    private Cursor mCursor;
+
+    public VideoBrowserActivity() {
     }
 
-    /** Called when the activity is first created. */
     @Override
-    public void onCreate(Bundle icicle)
-    {
-        super.onCreate(icicle);
+    public void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
         init();
     }
@@ -96,10 +98,10 @@ public class VideoBrowserActivity extends ListActivity implements MusicUtils.Def
         if (resolver == null) {
             System.out.println("resolver = null");
         } else {
-            mSortOrder = MediaStore.Video.Media.TITLE + " COLLATE UNICODE";
-            mWhereClause = MediaStore.Video.Media.TITLE + " != ''";
+            String sortOrder = MediaStore.Video.Media.TITLE + " COLLATE UNICODE";
+            String whereClause = MediaStore.Video.Media.TITLE + " != ''";
             mCursor = resolver.query(MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-                cols, mWhereClause , null, mSortOrder);
+                cols, whereClause , null, sortOrder);
         }
     }
 
@@ -110,9 +112,5 @@ public class VideoBrowserActivity extends ListActivity implements MusicUtils.Def
         }
         super.onDestroy();
     }
-
-    private Cursor mCursor;
-    private String mWhereClause;
-    private String mSortOrder;
 }
 

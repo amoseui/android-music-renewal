@@ -25,8 +25,7 @@ import android.util.Log;
  * A variant of MergeCursor that sorts the cursors being merged. If decent
  * performance is ever obtained, it can be put back under android.database.
  */
-public class SortCursor extends AbstractCursor
-{
+class SortCursor extends AbstractCursor {
     private static final String TAG = "SortCursor";
     private Cursor mCursor; // updated in onMove
     private Cursor[] mCursors;
@@ -52,8 +51,7 @@ public class SortCursor extends AbstractCursor
         }
     };
 
-    public SortCursor(Cursor[] cursors, String sortcolumn)
-    {
+    SortCursor(Cursor[] cursors, String sortcolumn) {
         mCursors = cursors;
 
         int length = mCursors.length;
@@ -88,21 +86,18 @@ public class SortCursor extends AbstractCursor
     }
 
     @Override
-    public int getCount()
-    {
+    public int getCount() {
         int count = 0;
-        int length = mCursors.length;
-        for (int i = 0 ; i < length ; i++) {
-            if (mCursors[i] != null) {
-                count += mCursors[i].getCount();
+        for (Cursor c : mCursors) {
+            if (c != null) {
+                count += c.getCount();
             }
         }
         return count;
     }
 
     @Override
-    public boolean onMove(int oldPosition, int newPosition)
-    {
+    public boolean onMove(int oldPosition, int newPosition) {
         if (oldPosition == newPosition)
             return true;
 
@@ -139,9 +134,9 @@ public class SortCursor extends AbstractCursor
         }
 
         if (newPosition < oldPosition || oldPosition == -1) {
-            for (int i = 0 ; i < length; i++) {
-                if (mCursors[i] == null) continue;
-                mCursors[i].moveToFirst();
+            for (Cursor c : mCursors) {
+                if (c == null) continue;
+                c.moveToFirst();
             }
             oldPosition = 0;
         }
@@ -242,67 +237,54 @@ public class SortCursor extends AbstractCursor
         } else {
             // All of the cursors may be empty, but they can still return
             // this information.
-            int length = mCursors.length;
-            for (int i = 0 ; i < length ; i++) {
-                if (mCursors[i] != null) {
-                    return mCursors[i].getColumnNames();
-                }
+            for (Cursor c : mCursors) {
+                if (c == null) continue;
+                return c.getColumnNames();
             }
             throw new IllegalStateException("No cursor that can return names");
         }
     }
 
     @Override
-    public void deactivate()
-    {
-        int length = mCursors.length;
-        for (int i = 0 ; i < length ; i++) {
-            if (mCursors[i] == null) continue;
-            mCursors[i].deactivate();
+    public void deactivate() {
+        for (Cursor c : mCursors) {
+            if (c == null) continue;
+            c.deactivate();
         }
     }
 
     @Override
     public void close() {
-        int length = mCursors.length;
-        for (int i = 0 ; i < length ; i++) {
-            if (mCursors[i] == null) continue;
-            mCursors[i].close();
+        for (Cursor c : mCursors) {
+            if (c == null) continue;
+            c.close();
         }
     }
 
     @Override
     public void registerDataSetObserver(DataSetObserver observer) {
-        int length = mCursors.length;
-        for (int i = 0 ; i < length ; i++) {
-            if (mCursors[i] != null) {
-                mCursors[i].registerDataSetObserver(observer);
-            }
+        for (Cursor c : mCursors) {
+            if (c == null) continue;
+            c.registerDataSetObserver(observer);
         }
     }
 
     @Override
     public void unregisterDataSetObserver(DataSetObserver observer) {
-        int length = mCursors.length;
-        for (int i = 0 ; i < length ; i++) {
-            if (mCursors[i] != null) {
-                mCursors[i].unregisterDataSetObserver(observer);
-            }
+        for (Cursor c : mCursors) {
+            if (c == null) continue;
+            c.unregisterDataSetObserver(observer);
         }
     }
 
     @Override
-    public boolean requery()
-    {
-        int length = mCursors.length;
-        for (int i = 0 ; i < length ; i++) {
-            if (mCursors[i] == null) continue;
-
-            if (mCursors[i].requery() == false) {
+    public boolean requery() {
+        for (Cursor c : mCursors) {
+            if (c == null) continue;
+            if (c.requery()) {
                 return false;
             }
         }
-
         return true;
     }
 }

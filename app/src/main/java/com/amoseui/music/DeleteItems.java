@@ -25,15 +25,14 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 
-public class DeleteItems extends Activity
-{
-    private TextView mPrompt;
-    private Button mButton;
+import com.amoseui.music.utils.MusicUtils;
+
+public class DeleteItems extends Activity {
     private long [] mItemList;
 
     @Override
-    public void onCreate(Bundle icicle) {
-        super.onCreate(icicle);
+    public void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -41,11 +40,11 @@ public class DeleteItems extends Activity
         getWindow().setLayout(WindowManager.LayoutParams.MATCH_PARENT,
                                     WindowManager.LayoutParams.WRAP_CONTENT);
 
-        mPrompt = (TextView)findViewById(R.id.prompt);
-        mButton = (Button) findViewById(R.id.delete);
-        mButton.setOnClickListener(mButtonClicked);
+        TextView prompt = (TextView)findViewById(R.id.prompt);
+        Button button = (Button) findViewById(R.id.delete);
+        button.setOnClickListener(mButtonClicked);
 
-        ((Button)findViewById(R.id.cancel)).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.cancel).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 finish();
             }
@@ -54,8 +53,8 @@ public class DeleteItems extends Activity
         Bundle b = getIntent().getExtras();
         String desc = b.getString("description");
         mItemList = b.getLongArray("items");
-        
-        mPrompt.setText(desc);
+
+        prompt.setText(desc);
     }
     
     private View.OnClickListener mButtonClicked = new View.OnClickListener() {

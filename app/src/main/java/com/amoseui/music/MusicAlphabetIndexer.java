@@ -27,7 +27,7 @@ import android.widget.AlphabetIndexer;
  */
 class MusicAlphabetIndexer extends AlphabetIndexer {
     
-    public MusicAlphabetIndexer(Cursor cursor, int sortedColumnIndex, CharSequence alphabet) {
+    MusicAlphabetIndexer(Cursor cursor, int sortedColumnIndex, CharSequence alphabet) {
         super(cursor, sortedColumnIndex, alphabet);
     }
     

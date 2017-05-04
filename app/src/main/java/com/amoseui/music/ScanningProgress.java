@@ -27,6 +27,8 @@ import android.provider.MediaStore;
 import android.view.Window;
 import android.view.WindowManager;
 
+import com.amoseui.music.utils.MusicUtils;
+
 public class ScanningProgress extends Activity
 {
     private final static int CHECK = 0;
@@ -60,8 +62,8 @@ public class ScanningProgress extends Activity
     };
 
     @Override
-    public void onCreate(Bundle icicle) {
-        super.onCreate(icicle);
+    public void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);

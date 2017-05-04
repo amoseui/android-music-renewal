@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.amoseui.music;
+package com.amoseui.music.utils;
 
 import android.app.Activity;
 import android.content.ComponentName;
@@ -46,6 +46,7 @@ import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
 import android.provider.MediaStore;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.text.format.Time;
 import android.util.Log;
@@ -57,6 +58,13 @@ import android.view.Window;
 import android.widget.TabWidget;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.amoseui.music.IMediaPlaybackService;
+import com.amoseui.music.MediaPlaybackActivity;
+import com.amoseui.music.MediaPlaybackService;
+import com.amoseui.music.R;
+import com.amoseui.music.ScanningProgress;
+import com.amoseui.music.SharedPreferencesCompat;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -74,21 +82,21 @@ public class MusicUtils {
     private static final String TAG = "MusicUtils";
 
     public interface Defs {
-        public final static int OPEN_URL = 0;
-        public final static int ADD_TO_PLAYLIST = 1;
-        public final static int USE_AS_RINGTONE = 2;
-        public final static int PLAYLIST_SELECTED = 3;
-        public final static int NEW_PLAYLIST = 4;
-        public final static int PLAY_SELECTION = 5;
-        public final static int GOTO_START = 6;
-        public final static int GOTO_PLAYBACK = 7;
-        public final static int PARTY_SHUFFLE = 8;
-        public final static int SHUFFLE_ALL = 9;
-        public final static int DELETE_ITEM = 10;
-        public final static int SCAN_DONE = 11;
-        public final static int QUEUE = 12;
-        public final static int EFFECTS_PANEL = 13;
-        public final static int CHILD_MENU_BASE = 14; // this should be the last item
+        // int OPEN_URL = 0;
+        int ADD_TO_PLAYLIST = 1;
+        int USE_AS_RINGTONE = 2;
+        int PLAYLIST_SELECTED = 3;
+        int NEW_PLAYLIST = 4;
+        int PLAY_SELECTION = 5;
+        int GOTO_START = 6;
+        // int GOTO_PLAYBACK = 7;
+        int PARTY_SHUFFLE = 8;
+        int SHUFFLE_ALL = 9;
+        int DELETE_ITEM = 10;
+        int SCAN_DONE = 11;
+        int QUEUE = 12;
+        int EFFECTS_PANEL = 13;
+        int CHILD_MENU_BASE = 14; // this should be the last item
     }
 
     public static String makeAlbumsLabel(Context context, int numalbums, int numsongs, boolean isUnknown) {
@@ -105,13 +113,13 @@ public class MusicUtils {
             } else {
                 String f = r.getQuantityText(R.plurals.Nsongs, numsongs).toString();
                 sFormatBuilder.setLength(0);
-                sFormatter.format(f, Integer.valueOf(numsongs));
+                sFormatter.format(f, numsongs);
                 songs_albums.append(sFormatBuilder);
             }
         } else {
             String f = r.getQuantityText(R.plurals.Nalbums, numalbums).toString();
             sFormatBuilder.setLength(0);
-            sFormatter.format(f, Integer.valueOf(numalbums));
+            sFormatter.format(f, numalbums);
             songs_albums.append(sFormatBuilder);
             songs_albums.append(context.getString(R.string.albumsongseparator));
         }
@@ -138,20 +146,20 @@ public class MusicUtils {
             if (! isUnknown) {
                 String f = r.getQuantityText(R.plurals.Nalbums, numalbums).toString();
                 sFormatBuilder.setLength(0);
-                sFormatter.format(f, Integer.valueOf(numalbums));
+                sFormatter.format(f, numalbums);
                 songs_albums.append(sFormatBuilder);
                 songs_albums.append(context.getString(R.string.albumsongseparator));
             }
             String f = r.getQuantityText(R.plurals.Nsongs, numsongs).toString();
             sFormatBuilder.setLength(0);
-            sFormatter.format(f, Integer.valueOf(numsongs));
+            sFormatter.format(f, numsongs);
             songs_albums.append(sFormatBuilder);
         }
         return songs_albums.toString();
     }
     
     public static IMediaPlaybackService sService = null;
-    private static HashMap<Context, ServiceBinder> sConnectionMap = new HashMap<Context, ServiceBinder>();
+    private static HashMap<Context, ServiceBinder> sConnectionMap = new HashMap<>();
 
     public static class ServiceToken {
         ContextWrapper mWrappedContext;
@@ -226,6 +234,7 @@ public class MusicUtils {
             try {
                 return sService.getAlbumId();
             } catch (RemoteException ex) {
+                Log.e(TAG, "getCurrentAlbumId");
             }
         }
         return -1;
@@ -236,6 +245,7 @@ public class MusicUtils {
             try {
                 return sService.getArtistId();
             } catch (RemoteException ex) {
+                Log.e(TAG, "getCurrentArtistId");
             }
         }
         return -1;
@@ -246,6 +256,7 @@ public class MusicUtils {
             try {
                 return sService.getAudioId();
             } catch (RemoteException ex) {
+                Log.e(TAG, "getCurrentAudioId");
             }
         }
         return -1;
@@ -257,6 +268,7 @@ public class MusicUtils {
             try {
                 mode = sService.getShuffleMode();
             } catch (RemoteException ex) {
+                Log.e(TAG, "getCurrentShuffleMode");
             }
         }
         return mode;
@@ -272,6 +284,7 @@ public class MusicUtils {
                     sService.setShuffleMode(MediaPlaybackService.SHUFFLE_AUTO);
                 }
             } catch (RemoteException ex) {
+                Log.e(TAG, "togglePartyShuffle");
             }
         }
     }
@@ -299,6 +312,7 @@ public class MusicUtils {
             try {
                 return sService.getPath() != null;
             } catch (RemoteException ex) {
+                Log.e(TAG, "isMusicLoaded");
             }
         }
         return false;
@@ -313,7 +327,7 @@ public class MusicUtils {
         int len = cursor.getCount();
         long [] list = new long[len];
         cursor.moveToFirst();
-        int colidx = -1;
+        int colidx;
         try {
             colidx = cursor.getColumnIndexOrThrow(MediaStore.Audio.Playlists.Members.AUDIO_ID);
         } catch (IllegalArgumentException ex) {
@@ -357,7 +371,7 @@ public class MusicUtils {
         return sEmptyList;
     }
 
-    public static long [] getSongListForPlaylist(Context context, long plid) {
+    private static long [] getSongListForPlaylist(Context context, long plid) {
         final String[] ccols = new String[] { MediaStore.Audio.Playlists.Members.AUDIO_ID };
         Cursor cursor = query(context, MediaStore.Audio.Playlists.Members.getContentUri("external", plid),
                 ccols, null, null, MediaStore.Audio.Playlists.Members.DEFAULT_SORT_ORDER);
@@ -447,10 +461,8 @@ public class MusicUtils {
     }
 
     public static void clearPlaylist(Context context, int plid) {
-        
         Uri uri = MediaStore.Audio.Playlists.Members.getContentUri("external", plid);
         context.getContentResolver().delete(uri, null, null);
-        return;
     }
     
     public static void deleteTracks(Context context, long [] list) {
@@ -487,6 +499,7 @@ public class MusicUtils {
                     c.moveToNext();
                 }
             } catch (RemoteException ex) {
+                Log.e(TAG, "deleteTracks");
             }
 
             // step 2: remove selected tracks from the database
@@ -512,7 +525,7 @@ public class MusicUtils {
         }
 
         String message = context.getResources().getQuantityString(
-                R.plurals.NNNtracksdeleted, list.length, Integer.valueOf(list.length));
+                R.plurals.NNNtracksdeleted, list.length, list.length);
         
         Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
         // We deleted a number of tracks, which could affect any number of things
@@ -527,9 +540,10 @@ public class MusicUtils {
         try {
             sService.enqueue(list, MediaPlaybackService.LAST);
             String message = context.getResources().getQuantityString(
-                    R.plurals.NNNtrackstoplaylist, list.length, Integer.valueOf(list.length));
+                    R.plurals.NNNtrackstoplaylist, list.length, list.length);
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
         } catch (RemoteException ex) {
+            Log.e(TAG, "addToCurrentPlaylist");
         }
     }
 
@@ -612,7 +626,7 @@ public class MusicUtils {
         return query(context, uri, projection, selection, selectionArgs, sortOrder, 0);
     }
     
-    public static boolean isMediaScannerScanning(Context context) {
+    private static boolean isMediaScannerScanning(Context context) {
         boolean result = false;
         Cursor cursor = query(context, MediaStore.getMediaScannerUri(), 
                 new String [] { MediaStore.MEDIA_SCANNER_VOLUME }, null, null, null);
@@ -698,11 +712,7 @@ public class MusicUtils {
         }
 
         a.setTitle(title);
-        View v = a.findViewById(R.id.sd_message);
-        if (v != null) {
-            v.setVisibility(View.VISIBLE);
-        }
-        v = a.findViewById(R.id.sd_icon);
+        View v = a.findViewById(R.id.sd_icon);
         if (v != null) {
             v.setVisibility(View.VISIBLE);
         }
@@ -715,7 +725,10 @@ public class MusicUtils {
             v.setVisibility(View.GONE);
         }
         TextView tv = (TextView) a.findViewById(R.id.sd_message);
-        tv.setText(message);
+        if (tv != null) {
+            tv.setVisibility(View.VISIBLE);
+            tv.setText(message);
+        }
     }
     
     public static void hideDatabaseError(Activity a) {
@@ -793,7 +806,7 @@ public class MusicUtils {
         if (list.length == 0 || sService == null) {
             Log.d("MusicUtils", "attempt to play empty song list");
             // Don't try to play empty playlists. Nothing good will come of it.
-            String message = context.getString(R.string.emptyplaylist, list.length);
+            String message = context.getString(R.string.emptyplaylist);
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
             return;
         }
@@ -820,6 +833,7 @@ public class MusicUtils {
             sService.open(list, force_shuffle ? -1 : position);
             sService.play();
         } catch (RemoteException ex) {
+            Log.e(TAG, "playAll");
         } finally {
             Intent intent = new Intent("com.amoseui.music.PLAYBACK_VIEWER")
                 .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -831,6 +845,7 @@ public class MusicUtils {
         try {
             sService.removeTracks(0, Integer.MAX_VALUE);
         } catch (RemoteException ex) {
+            Log.e(TAG, "clearQueue");
         }
     }
     
@@ -838,31 +853,34 @@ public class MusicUtils {
     // scaling, dithering or filtering.
     private static class FastBitmapDrawable extends Drawable {
         private Bitmap mBitmap;
-        public FastBitmapDrawable(Bitmap b) {
+
+        FastBitmapDrawable(Bitmap b) {
             mBitmap = b;
         }
+
         @Override
-        public void draw(Canvas canvas) {
+        public void draw(@NonNull Canvas canvas) {
             canvas.drawBitmap(mBitmap, 0, 0, null);
         }
+
         @Override
         public int getOpacity() {
             return PixelFormat.OPAQUE;
         }
+
         @Override
         public void setAlpha(int alpha) {
         }
+
         @Override
         public void setColorFilter(ColorFilter cf) {
         }
     }
     
-    private static int sArtId = -2;
-    private static Bitmap mCachedBit = null;
     private static final BitmapFactory.Options sBitmapOptionsCache = new BitmapFactory.Options();
     private static final BitmapFactory.Options sBitmapOptions = new BitmapFactory.Options();
     private static final Uri sArtworkUri = Uri.parse("content://media/external/audio/albumart");
-    private static final HashMap<Long, Drawable> sArtCache = new HashMap<Long, Drawable>();
+    private static final HashMap<Long, Drawable> sArtCache = new HashMap<>();
     private static int sArtCacheId = -1;
     
     static {
@@ -876,7 +894,7 @@ public class MusicUtils {
         sBitmapOptions.inDither = false;
     }
 
-    public static void initAlbumArtCache() {
+    private static void initAlbumArtCache() {
         try {
             int id = sService.getMediaMountedCount();
             if (id != sArtCacheId) {
@@ -895,7 +913,7 @@ public class MusicUtils {
     }
     
     public static Drawable getCachedArtwork(Context context, long artIndex, BitmapDrawable defaultArtwork) {
-        Drawable d = null;
+        Drawable d;
         synchronized(sArtCache) {
             d = sArtCache.get(artIndex);
         }
@@ -968,11 +986,13 @@ public class MusicUtils {
                 
                 return b;
             } catch (FileNotFoundException e) {
+                Log.e(TAG, "getArtworkQuick");
             } finally {
                 try {
                     if (fd != null)
                         fd.close();
                 } catch (IOException e) {
+                    Log.e(TAG, "getArtworkQuick");
                 }
             }
         }
@@ -1036,6 +1056,7 @@ public class MusicUtils {
                         in.close();
                     }
                 } catch (IOException ex) {
+                    Log.e(TAG, "getArtwork");
                 }
             }
         }
@@ -1043,12 +1064,8 @@ public class MusicUtils {
         return null;
     }
     
-    // get album art for specified file
-    private static final String sExternalMediaUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI.toString();
     private static Bitmap getArtworkFromFile(Context context, long songid, long albumid) {
         Bitmap bm = null;
-        byte [] art = null;
-        String path = null;
 
         if (albumid < 0 && songid < 0) {
             throw new IllegalArgumentException("Must specify an album or a song id");
@@ -1070,11 +1087,8 @@ public class MusicUtils {
                     bm = BitmapFactory.decodeFileDescriptor(fd);
                 }
             }
-        } catch (IllegalStateException ex) {
-        } catch (FileNotFoundException ex) {
-        }
-        if (bm != null) {
-            mCachedBit = bm;
+        } catch (FileNotFoundException e) {
+            Log.e(TAG, "getArtworkFromFile");
         }
         return bm;
     }
@@ -1086,13 +1100,13 @@ public class MusicUtils {
                 context.getResources().openRawResource(R.drawable.albumart_mp_unknown), null, opts);
     }
     
-    static int getIntPref(Context context, String name, int def) {
+    public static int getIntPref(Context context, String name, int def) {
         SharedPreferences prefs =
             context.getSharedPreferences(context.getPackageName(), Context.MODE_PRIVATE);
         return prefs.getInt(name, def);
     }
     
-    static void setIntPref(Context context, String name, int value) {
+    public static void setIntPref(Context context, String name, int value) {
         SharedPreferences prefs =
             context.getSharedPreferences(context.getPackageName(), Context.MODE_PRIVATE);
         Editor ed = prefs.edit();
@@ -1100,7 +1114,7 @@ public class MusicUtils {
         SharedPreferencesCompat.apply(ed);
     }
 
-    static void setRingtone(Context context, long id) {
+    public static void setRingtone(Context context, long id) {
         ContentResolver resolver = context.getContentResolver();
         // Set the flag in the database to mark this as a ringtone
         Uri ringUri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id);
@@ -1139,20 +1153,20 @@ public class MusicUtils {
         }
     }
     
-    static int sActiveTabIndex = -1;
+    private static int sActiveTabIndex = -1;
     
-    static boolean updateButtonBar(Activity a, int highlight) {
+    public static boolean updateButtonBar(Activity a, int highlight) {
         final TabWidget ll = (TabWidget) a.findViewById(R.id.buttonbar);
-        boolean withtabs = false;
+        boolean withTabs = false;
         Intent intent = a.getIntent();
         if (intent != null) {
-            withtabs = intent.getBooleanExtra("withtabs", false);
+            withTabs = intent.getBooleanExtra("withtabs", false);
         }
         
-        if (highlight == 0 || !withtabs) {
+        if (highlight == 0 || !withTabs) {
             ll.setVisibility(View.GONE);
-            return withtabs;
-        } else if (withtabs) {
+            return withTabs;
+        } else {
             ll.setVisibility(View.VISIBLE);
         }
         for (int i = ll.getChildCount() - 1; i >= 0; i--) {
@@ -1184,10 +1198,10 @@ public class MusicUtils {
                     processTabClick((Activity)ll.getContext(), v, ll.getChildAt(sActiveTabIndex).getId());
                 }});
         }
-        return withtabs;
+        return true;
     }
 
-    static void processTabClick(Activity a, View v, int current) {
+    private static void processTabClick(Activity a, View v, int current) {
         int id = v.getId();
         if (id == current) {
             return;
@@ -1202,7 +1216,7 @@ public class MusicUtils {
         }
     }
     
-    static void activateTab(Activity a, int id) {
+    public static void activateTab(Activity a, int id) {
         Intent intent = new Intent(Intent.ACTION_PICK);
         switch (id) {
             case R.id.artisttab:
@@ -1231,18 +1245,13 @@ public class MusicUtils {
         a.overridePendingTransition(0, 0);
     }
     
-    static void updateNowPlaying(Activity a) {
+    public static void updateNowPlaying(Activity a) {
         View nowPlayingView = a.findViewById(R.id.nowplaying);
         if (nowPlayingView == null) {
             return;
         }
         try {
-            boolean withtabs = false;
-            Intent intent = a.getIntent();
-            if (intent != null) {
-                withtabs = intent.getBooleanExtra("withtabs", false);
-            }
-            if (true && MusicUtils.sService != null && MusicUtils.sService.getAudioId() != -1) {
+            if (MusicUtils.sService != null && MusicUtils.sService.getAudioId() != -1) {
                 TextView title = (TextView) nowPlayingView.findViewById(R.id.title);
                 TextView artist = (TextView) nowPlayingView.findViewById(R.id.artist);
                 title.setText(MusicUtils.sService.getTrackName());
@@ -1263,11 +1272,12 @@ public class MusicUtils {
                 return;
             }
         } catch (RemoteException ex) {
+            Log.e(TAG, "updateNowPlaying");
         }
         nowPlayingView.setVisibility(View.GONE);
     }
 
-    static void setBackground(View v, Bitmap bm) {
+    public static void setBackground(View v, Bitmap bm) {
 
         if (bm == null) {
             v.setBackgroundResource(0);
@@ -1304,7 +1314,7 @@ public class MusicUtils {
         v.setBackgroundDrawable(new BitmapDrawable(bg));
     }
 
-    static int getCardId(Context context) {
+    public static int getCardId(Context context) {
         ContentResolver res = context.getContentResolver();
         Cursor c = res.query(Uri.parse("content://media/external/fs_id"), null, null, null, null);
         int id = -1;
@@ -1316,7 +1326,7 @@ public class MusicUtils {
         return id;
     }
 
-    static class LogEntry {
+    private static class LogEntry {
         Object item;
         long time;
 
@@ -1340,7 +1350,7 @@ public class MusicUtils {
     private static int sLogPtr = 0;
     private static Time sTime = new Time();
 
-    static void debugLog(Object o) {
+    public static void debugLog(Object o) {
 
         sMusicLog[sLogPtr] = new LogEntry(o);
         sLogPtr++;
@@ -1349,7 +1359,7 @@ public class MusicUtils {
         }
     }
 
-    static void debugDump(PrintWriter out) {
+    public static void debugDump(PrintWriter out) {
         for (int i = 0; i < sMusicLog.length; i++) {
             int idx = (sLogPtr + i);
             if (idx >= sMusicLog.length) {

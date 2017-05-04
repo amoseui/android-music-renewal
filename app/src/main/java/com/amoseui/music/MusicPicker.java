@@ -45,9 +45,9 @@ import android.widget.SectionIndexer;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
+import com.amoseui.music.utils.MusicUtils;
+
 import java.io.IOException;
-import java.util.Formatter;
-import java.util.Locale;
 
 /**
  * Activity allowing the user to select a music track on the device, and
@@ -98,12 +98,12 @@ public class MusicPicker extends ListActivity
             MediaStore.Audio.Media.TRACK
     };
     
-    /** Formatting optimization to avoid creating many temporary objects. */
-    static StringBuilder sFormatBuilder = new StringBuilder();
-    /** Formatting optimization to avoid creating many temporary objects. */
-    static Formatter sFormatter = new Formatter(sFormatBuilder, Locale.getDefault());
-    /** Formatting optimization to avoid creating many temporary objects. */
-    static final Object[] sTimeArgs = new Object[5];
+    // /** Formatting optimization to avoid creating many temporary objects. */
+    // static StringBuilder sFormatBuilder = new StringBuilder();
+    // /** Formatting optimization to avoid creating many temporary objects. */
+    // static Formatter sFormatter = new Formatter(sFormatBuilder, Locale.getDefault());
+    // /** Formatting optimization to avoid creating many temporary objects. */
+    // static final Object[] sTimeArgs = new Object[5];
 
     /** Uri to the directory of all music being displayed. */
     Uri mBaseUri;
@@ -156,7 +156,7 @@ public class MusicPicker extends ListActivity
      * our cursor data to our list item structure, and takes care of other
      * advanced features such as indexing and filtering.
      */
-    class TrackListAdapter extends SimpleCursorAdapter
+    private class TrackListAdapter extends SimpleCursorAdapter
             implements SectionIndexer {
         final ListView mListView;
         
@@ -203,12 +203,7 @@ public class MusicPicker extends ListActivity
 
         @Override
         public boolean isEmpty() {
-            if (mLoading) {
-                // We don't want the empty state to show when loading.
-                return false;
-            } else {
-                return super.isEmpty();
-            }
+            return !mLoading && super.isEmpty();
         }
         
         @Override
@@ -372,7 +367,8 @@ public class MusicPicker extends ListActivity
      * to our state as they become available.
      */
     private final class QueryHandler extends AsyncQueryHandler {
-        public QueryHandler(Context context) {
+
+        QueryHandler(Context context) {
             super(context.getContentResolver());
         }
 
@@ -400,25 +396,24 @@ public class MusicPicker extends ListActivity
         }
     }
 
-    /** Called when the activity is first created. */
     @Override
-    public void onCreate(Bundle icicle) {
-        super.onCreate(icicle);
+    public void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
         
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         
         int sortMode = TRACK_MENU;
-        if (icicle == null) {
+        if (bundle == null) {
             mSelectedUri = getIntent().getParcelableExtra(
                     RingtoneManager.EXTRA_RINGTONE_EXISTING_URI);
         } else {
-            mSelectedUri = (Uri)icicle.getParcelable(
+            mSelectedUri = bundle.getParcelable(
                     RingtoneManager.EXTRA_RINGTONE_EXISTING_URI);
             // Retrieve list state. This will be applied after the
             // QueryHandler has run
-            mListState = icicle.getParcelable(LIST_STATE_KEY);
-            mListHasFocus = icicle.getBoolean(FOCUS_KEY);
-            sortMode = icicle.getInt(SORT_MODE_KEY, sortMode);
+            mListState = bundle.getParcelable(LIST_STATE_KEY);
+            mListHasFocus = bundle.getBoolean(FOCUS_KEY);
+            sortMode = bundle.getInt(SORT_MODE_KEY, sortMode);
         }
         if (Intent.ACTION_GET_CONTENT.equals(getIntent().getAction())) {
             mBaseUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
@@ -484,19 +479,20 @@ public class MusicPicker extends ListActivity
         setSortMode(sortMode);
     }
 
-    @Override public void onRestart() {
+    @Override
+    public void onRestart() {
         super.onRestart();
         doQuery(false, null);
     }
     
-    @Override public boolean onOptionsItemSelected(MenuItem item) {
-        if (setSortMode(item.getItemId())) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        return setSortMode(item.getItemId())
+                || super.onOptionsItemSelected(item);
     }
 
-    @Override public boolean onCreateOptionsMenu(Menu menu) {
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         menu.add(Menu.NONE, TRACK_MENU, Menu.NONE, R.string.sort_by_track);
         menu.add(Menu.NONE, ALBUM_MENU, Menu.NONE, R.string.sort_by_album);
@@ -504,21 +500,24 @@ public class MusicPicker extends ListActivity
         return true;
     }
 
-    @Override protected void onSaveInstanceState(Bundle icicle) {
-        super.onSaveInstanceState(icicle);
+    @Override
+    protected void onSaveInstanceState(Bundle bundle) {
+        super.onSaveInstanceState(bundle);
         // Save list state in the bundle so we can restore it after the
         // QueryHandler has run
-        icicle.putParcelable(LIST_STATE_KEY, getListView().onSaveInstanceState());
-        icicle.putBoolean(FOCUS_KEY, getListView().hasFocus());
-        icicle.putInt(SORT_MODE_KEY, mSortMode);
+        bundle.putParcelable(LIST_STATE_KEY, getListView().onSaveInstanceState());
+        bundle.putBoolean(FOCUS_KEY, getListView().hasFocus());
+        bundle.putInt(SORT_MODE_KEY, mSortMode);
     }
     
-    @Override public void onPause() {
+    @Override
+    public void onPause() {
         super.onPause();
         stopMediaPlayer();
     }
     
-    @Override public void onStop() {
+    @Override
+    public void onStop() {
         super.onStop();
         
         // We don't want the list to display the empty state, since when we
@@ -608,6 +607,7 @@ public class MusicPicker extends ListActivity
                 return getContentResolver().query(uri, CURSOR_COLS,
                         where.toString(), null, mSortOrder);
             } catch (UnsupportedOperationException ex) {
+                Log.e(TAG, "doQuery");
             }
         } else {
             mAdapter.setLoading(true);
@@ -618,18 +618,18 @@ public class MusicPicker extends ListActivity
         return null;
     }
     
-    @Override protected void onListItemClick(ListView l, View v, int position,
-            long id) {
+    @Override
+    protected void onListItemClick(ListView l, View v, int position, long id) {
         mCursor.moveToPosition(position);
         if (DBG) Log.v(TAG, "Click on " + position + " (id=" + id
                 + ", cursid="
                 + mCursor.getLong(mCursor.getColumnIndex(MediaStore.Audio.Media._ID))
                 + ") in cursor " + mCursor
                 + " adapter=" + l.getAdapter());
-        setSelected(mCursor);
+        setSelected();
     }
     
-    void setSelected(Cursor c) {
+    void setSelected() {
         Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         long newId = mCursor.getLong(mCursor.getColumnIndex(MediaStore.Audio.Media._ID));
         mSelectedUri = ContentUris.withAppendedId(uri, newId);
@@ -649,7 +649,7 @@ public class MusicPicker extends ListActivity
             } catch (IOException e) {
                 Log.w("MusicPicker", "Unable to play track", e);
             }
-        } else if (mMediaPlayer != null) {
+        } else {
             stopMediaPlayer();
             getListView().invalidateViews();
         }

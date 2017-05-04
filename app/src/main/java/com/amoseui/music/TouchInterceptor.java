@@ -25,13 +25,13 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.GestureDetector;
+import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.view.GestureDetector.SimpleOnGestureListener;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -367,7 +367,7 @@ public class TouchInterceptor extends ListView {
         stopDragging();
 
         mWindowParams = new WindowManager.LayoutParams();
-        mWindowParams.gravity = Gravity.TOP | Gravity.LEFT;
+        mWindowParams.gravity = Gravity.TOP | Gravity.START;
         mWindowParams.x = x - mDragPointX + mXOffset;
         mWindowParams.y = y - mDragPointY + mYOffset;
 
@@ -459,13 +459,15 @@ public class TouchInterceptor extends ListView {
         mRemoveListener = l;
     }
 
-    public interface DragListener {
+    interface DragListener {
         void drag(int from, int to);
     }
-    public interface DropListener {
+
+    interface DropListener {
         void drop(int from, int to);
     }
-    public interface RemoveListener {
+
+    interface RemoveListener {
         void remove(int which);
     }
 }

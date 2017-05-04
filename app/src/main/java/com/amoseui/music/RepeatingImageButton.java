@@ -125,7 +125,7 @@ public class RepeatingImageButton extends ImageButton {
         }
     }
     
-    public interface RepeatListener {
+    interface RepeatListener {
         /**
          * This method will be called repeatedly at roughly the interval
          * specified in setRepeatListener(), for as long as the button

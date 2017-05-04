@@ -32,9 +32,7 @@ public class VerticalTextSpinner extends View {
 
     private static final int SELECTOR_ARROW_HEIGHT = 15;
 
-    private static int TEXT_SPACING;
     private static int TEXT_MARGIN_RIGHT;
-    private static int TEXT_SIZE;
     private static int TEXT1_Y;
     private static int TEXT2_Y;
     private static int TEXT3_Y;
@@ -70,7 +68,6 @@ public class VerticalTextSpinner extends View {
     private boolean mWrapAround = true;
 
     private int mTotalAnimatedDistance;
-    private int mNumberOfAnimations;
     private long mDelayBetweenAnimations;
     private int mDistanceOfEachAnimation;
 
@@ -84,7 +81,7 @@ public class VerticalTextSpinner extends View {
     private String mText4;
     private String mText5;
 
-    public interface OnChangedListener {
+    interface OnChangedListener {
         void onChanged(
                 VerticalTextSpinner spinner, int oldPos, int newPos, String[] items);
     }
@@ -102,13 +99,13 @@ public class VerticalTextSpinner extends View {
         super(context, attrs, defStyle);
 
         float scale = getResources().getDisplayMetrics().density;
-        TEXT_SPACING = (int)(18 * scale);
+        int TEXT_SPACING = (int)(18 * scale);
         TEXT_MARGIN_RIGHT = (int)(25 * scale);
-        TEXT_SIZE = (int)(22 * scale);
+        int TEXT_SIZE = (int)(22 * scale);
         SCROLL_DISTANCE = TEXT_SIZE + TEXT_SPACING;
-        TEXT1_Y = (TEXT_SIZE * (-2 + 2)) + (TEXT_SPACING * (-2 + 1));
-        TEXT2_Y = (TEXT_SIZE * (-1 + 2)) + (TEXT_SPACING * (-1 + 1));
-        TEXT3_Y = (TEXT_SIZE * (0 + 2)) + (TEXT_SPACING * (0 + 1));
+        TEXT1_Y = TEXT_SPACING * (-2 + 1);
+        TEXT2_Y = TEXT_SIZE;
+        TEXT3_Y = (TEXT_SIZE * 2) + TEXT_SPACING;
         TEXT4_Y = (TEXT_SIZE * (1 + 2)) + (TEXT_SPACING * (1 + 1));
         TEXT5_Y = (TEXT_SIZE * (2 + 2)) + (TEXT_SPACING * (2 + 1));
 
@@ -192,9 +189,9 @@ public class VerticalTextSpinner extends View {
         return ((mCurrentSelectedPos < (mTextList.length - 1)) || mWrapAround);
     }
 
-    @Override
     protected void onFocusChanged(boolean gainFocus, int direction,
             Rect previouslyFocusedRect) {
+        super.onFocusChanged(gainFocus, direction, previouslyFocusedRect);
         if (gainFocus) {
             setBackgroundDrawable(mBackgroundFocused);
             mSelector = mSelectorFocused;
@@ -278,7 +275,6 @@ public class VerticalTextSpinner extends View {
             /* The bounds of the top area where the text should be light */
             final int topLeft = 0;
             final int topTop = 0;
-            final int topRight = selectorRight;
             final int topBottom = selectorTop + SELECTOR_ARROW_HEIGHT;
 
             /* Assign a bunch of local finals for performance */
@@ -294,7 +290,7 @@ public class VerticalTextSpinner extends View {
              * draws in the area above the selector
              */
             canvas.save();
-            canvas.clipRect(topLeft, topTop, topRight, topBottom);
+            canvas.clipRect(topLeft, topTop, selectorRight, topBottom);
             drawText(canvas, text1, TEXT1_Y
                     + mTotalAnimatedDistance, textPaintLight);
             drawText(canvas, text2, TEXT2_Y
@@ -321,7 +317,6 @@ public class VerticalTextSpinner extends View {
             /* The bounds of the bottom area where the text should be light */
             final int bottomLeft = 0;
             final int bottomTop = selectorBottom - SELECTOR_ARROW_HEIGHT;
-            final int bottomRight = selectorRight;
             final int bottomBottom = getMeasuredHeight();
 
             /*
@@ -329,7 +324,7 @@ public class VerticalTextSpinner extends View {
              * in the area below the selector.
              */
             canvas.save();
-            canvas.clipRect(bottomLeft, bottomTop, bottomRight, bottomBottom);
+            canvas.clipRect(bottomLeft, bottomTop, selectorRight, bottomBottom);
             drawText(canvas, text3,
                     TEXT3_Y + mTotalAnimatedDistance, textPaintLight);
             drawText(canvas, text4,
@@ -454,14 +449,14 @@ public class VerticalTextSpinner extends View {
     }
 
     private void calculateAnimationValues() {
-        mNumberOfAnimations = (int) mScrollInterval / SCROLL_DISTANCE;
-        if (mNumberOfAnimations < MIN_ANIMATIONS) {
-            mNumberOfAnimations = MIN_ANIMATIONS;
-            mDistanceOfEachAnimation = SCROLL_DISTANCE / mNumberOfAnimations;
+        int numberOfAnimations = (int) mScrollInterval / SCROLL_DISTANCE;
+        if (numberOfAnimations < MIN_ANIMATIONS) {
+            numberOfAnimations = MIN_ANIMATIONS;
+            mDistanceOfEachAnimation = SCROLL_DISTANCE / numberOfAnimations;
             mDelayBetweenAnimations = 0;
         } else {
-            mDistanceOfEachAnimation = SCROLL_DISTANCE / mNumberOfAnimations;
-            mDelayBetweenAnimations = mScrollInterval / mNumberOfAnimations;
+            mDistanceOfEachAnimation = SCROLL_DISTANCE / numberOfAnimations;
+            mDelayBetweenAnimations = mScrollInterval / numberOfAnimations;
         }
     }
 
