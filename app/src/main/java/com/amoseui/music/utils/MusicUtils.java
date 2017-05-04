@@ -64,7 +64,6 @@ import com.amoseui.music.MediaPlaybackActivity;
 import com.amoseui.music.MediaPlaybackService;
 import com.amoseui.music.R;
 import com.amoseui.music.ScanningProgress;
-import com.amoseui.music.SharedPreferencesCompat;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -1111,7 +1110,7 @@ public class MusicUtils {
             context.getSharedPreferences(context.getPackageName(), Context.MODE_PRIVATE);
         Editor ed = prefs.edit();
         ed.putInt(name, value);
-        SharedPreferencesCompat.apply(ed);
+        ed.apply();
     }
 
     public static void setRingtone(Context context, long id) {
