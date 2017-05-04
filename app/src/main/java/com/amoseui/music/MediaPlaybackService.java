@@ -67,6 +67,9 @@ import java.util.Vector;
  * user to switch between activities without stopping playback.
  */
 public class MediaPlaybackService extends Service {
+
+    private static final String TAG = "MediaPlaybackService";
+
     /** used to specify whether enqueue() should start playing
      * the new list of files right away, next or once all the currently
      * queued files have been played
@@ -119,7 +122,7 @@ public class MediaPlaybackService extends Service {
     private long [] mAutoShuffleList = null;
     private long [] mPlayList = null;
     private int mPlayListLen = 0;
-    private Vector<Integer> mHistory = new Vector<Integer>(MAX_HISTORY_SIZE);
+    private Vector<Integer> mHistory = new Vector<>(MAX_HISTORY_SIZE);
     private Cursor mCursor;
     private int mPlayPos = -1;
     private int mNextPlayPos = -1;
@@ -429,11 +432,9 @@ public class MediaPlaybackService extends Service {
             int len = mPlayListLen;
             for (int i = 0; i < len; i++) {
                 long n = mPlayList[i];
-                if (n < 0) {
-                    continue;
-                } else if (n == 0) {
+                if (n == 0) {
                     q.append("0;");
-                } else {
+                } else if (n > 0){
                     while (n != 0) {
                         int digit = (int)(n & 0xf);
                         n >>>= 4;
@@ -476,11 +477,9 @@ public class MediaPlaybackService extends Service {
 
     private void reloadQueue() {
         String q = null;
-        
-        boolean newstyle = false;
+
         int id = mCardId;
         if (mPreferences.contains("cardid")) {
-            newstyle = true;
             id = mPreferences.getInt("cardid", ~mCardId);
         }
         if (id == mCardId) {
@@ -583,9 +582,8 @@ public class MediaPlaybackService extends Service {
             if (shufmode != SHUFFLE_NONE) {
                 // in shuffle mode we need to restore the history too
                 q = mPreferences.getString("history", "");
-                qlen = q != null ? q.length() : 0;
+                qlen = q.length();
                 if (qlen > 1) {
-                    plen = 0;
                     n = 0;
                     shift = 0;
                     mHistory.clear();
@@ -728,10 +726,8 @@ public class MediaPlaybackService extends Service {
 
     /**
      * Called when we receive a ACTION_MEDIA_EJECT notification.
-     *
-     * @param storagePath path to mount point for the removed media
      */
-    public void closeExternalStorageFiles(String storagePath) {
+    public void closeExternalStorageFiles() {
         // stop playback and clean up if the SD card is going to be unmounted.
         stop(true);
         notifyChange(QUEUE_CHANGED);
@@ -752,7 +748,7 @@ public class MediaPlaybackService extends Service {
                     if (action.equals(Intent.ACTION_MEDIA_EJECT)) {
                         saveQueue(true);
                         mQueueIsSaveable = false;
-                        closeExternalStorageFiles(intent.getData().getPath());
+                        closeExternalStorageFiles();
                     } else if (action.equals(Intent.ACTION_MEDIA_MOUNTED)) {
                         mMediaMountedCount++;
                         mCardId = MusicUtils.getCardId(MediaPlaybackService.this);
@@ -953,8 +949,9 @@ public class MediaPlaybackService extends Service {
     
     /**
      * Moves the item at index1 to index2.
-     * @param index1
-     * @param index2
+     *
+     * @param index1 first index
+     * @param index2 second index
      */
     public void moveQueueItem(int index1, int index2) {
         synchronized (this) {
@@ -1136,6 +1133,7 @@ public class MediaPlaybackService extends Service {
                         }
                     }
                 } catch (UnsupportedOperationException ex) {
+                    Log.e(TAG, "open");
                 }
             }
             mFileToPlay = path;
@@ -1302,8 +1300,7 @@ public class MediaPlaybackService extends Service {
                     // prev is a no-op
                     return;
                 }
-                Integer pos = mHistory.remove(histsize - 1);
-                mPlayPos = pos;
+                mPlayPos = mHistory.remove(histsize - 1);
             } else {
                 if (mPlayPos > 0) {
                     mPlayPos--;
@@ -1350,8 +1347,8 @@ public class MediaPlaybackService extends Service {
 
             int numHistory = mHistory.size();
             int numUnplayed = numTracks;
-            for (int i=0;i < numHistory; i++) {
-                int idx = mHistory.get(i).intValue();
+            for (int i = 0; i < numHistory; i++) {
+                int idx = mHistory.get(i);
                 if (idx < numTracks && tracks[idx] >= 0) {
                     numUnplayed--;
                     tracks[idx] = -1;
@@ -1462,6 +1459,7 @@ public class MediaPlaybackService extends Service {
                 getContentResolver().update(uri, values, null, null);
             }
         } catch (SQLiteException ex) {
+            Log.e(TAG, "saveBookmarkIfNeeded");
         }
     }
 
@@ -1532,7 +1530,8 @@ public class MediaPlaybackService extends Service {
     private static class Shuffler {
         private int mPrevious;
         private Random mRandom = new Random();
-        public int nextInt(int interval) {
+
+        int nextInt(int interval) {
             int ret;
             do {
                 ret = mRandom.nextInt(interval);
@@ -1540,7 +1539,7 @@ public class MediaPlaybackService extends Service {
             mPrevious = ret;
             return ret;
         }
-    };
+    }
 
     private boolean makeAutoShuffleList() {
         ContentResolver res = getContentResolver();
@@ -1561,6 +1560,7 @@ public class MediaPlaybackService extends Service {
             mAutoShuffleList = list;
             return true;
         } catch (RuntimeException ex) {
+            Log.e(TAG, "makeAutoShuffleList");
         } finally {
             if (c != null) {
                 c.close();
@@ -1788,10 +1788,7 @@ public class MediaPlaybackService extends Service {
 
     private boolean isPodcast() {
         synchronized (this) {
-            if (mCursor == null) {
-                return false;
-            }
-            return (mCursor.getInt(PODCASTCOLIDX) > 0);
+            return mCursor != null && mCursor.getInt(PODCASTCOLIDX) > 0;
         }
     }
     
@@ -1869,11 +1866,11 @@ public class MediaPlaybackService extends Service {
         private Handler mHandler;
         private boolean mIsInitialized = false;
 
-        public MultiPlayer() {
+        MultiPlayer() {
             mCurrentMediaPlayer.setWakeMode(MediaPlaybackService.this, PowerManager.PARTIAL_WAKE_LOCK);
         }
 
-        public void setDataSource(String path) {
+        void setDataSource(String path) {
             mIsInitialized = setDataSourceImpl(mCurrentMediaPlayer, path);
             if (mIsInitialized) {
                 setNextDataSource(null);
@@ -1907,7 +1904,7 @@ public class MediaPlaybackService extends Service {
             return true;
         }
 
-        public void setNextDataSource(String path) {
+        void setNextDataSource(String path) {
             mCurrentMediaPlayer.setNextMediaPlayer(null);
             if (mNextMediaPlayer != null) {
                 mNextMediaPlayer.release();
@@ -1929,7 +1926,7 @@ public class MediaPlaybackService extends Service {
             }
         }
         
-        public boolean isInitialized() {
+        boolean isInitialized() {
             return mIsInitialized;
         }
 
@@ -1946,12 +1943,12 @@ public class MediaPlaybackService extends Service {
         /**
          * You CANNOT use this player anymore after calling release()
          */
-        public void release() {
+        void release() {
             stop();
             mCurrentMediaPlayer.release();
         }
         
-        public void pause() {
+        void pause() {
             mCurrentMediaPlayer.pause();
         }
         
@@ -2008,31 +2005,32 @@ public class MediaPlaybackService extends Service {
             return mCurrentMediaPlayer.getCurrentPosition();
         }
 
-        public long seek(long whereto) {
+        long seek(long whereto) {
             mCurrentMediaPlayer.seekTo((int) whereto);
             return whereto;
         }
 
-        public void setVolume(float vol) {
+        void setVolume(float vol) {
             mCurrentMediaPlayer.setVolume(vol, vol);
         }
 
-        public void setAudioSessionId(int sessionId) {
+        void setAudioSessionId(int sessionId) {
             mCurrentMediaPlayer.setAudioSessionId(sessionId);
         }
 
-        public int getAudioSessionId() {
+        int getAudioSessionId() {
             return mCurrentMediaPlayer.getAudioSessionId();
         }
     }
 
-    static class CompatMediaPlayer extends MediaPlayer implements OnCompletionListener {
+    private static class CompatMediaPlayer extends MediaPlayer
+            implements OnCompletionListener {
 
         private boolean mCompatMode = true;
         private MediaPlayer mNextPlayer;
         private OnCompletionListener mCompletion;
 
-        public CompatMediaPlayer() {
+        CompatMediaPlayer() {
             try {
                 MediaPlayer.class.getMethod("setNextMediaPlayer", MediaPlayer.class);
                 mCompatMode = false;
@@ -2078,11 +2076,11 @@ public class MediaPlaybackService extends Service {
      * ensure that the Service can be GCd even when the system process still
      * has a remote reference to the stub.
      */
-    static class ServiceStub extends IMediaPlaybackService.Stub {
+    private static class ServiceStub extends IMediaPlaybackService.Stub {
         WeakReference<MediaPlaybackService> mService;
         
         ServiceStub(MediaPlaybackService service) {
-            mService = new WeakReference<MediaPlaybackService>(service);
+            mService = new WeakReference<>(service);
         }
 
         public void openFile(String path)
