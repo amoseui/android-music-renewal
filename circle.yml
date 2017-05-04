@@ -9,7 +9,7 @@ dependencies:
   cache_directories:
     - ~/.android
   pre:
-    - echo y | android update sdk --no-ui --all --filter tool,extra-android-m2repository,extra-android-support,extra-google-google_play_services,android-25,build-tools-25.0.2
+    - echo y | android update sdk --no-ui --all --filter tool,extra-android-m2repository,extra-android-support,extra-google-google_play_services,android-25,build-tools-25.0.3
 
 test:
   override:
