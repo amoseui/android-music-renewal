@@ -25,7 +25,7 @@ import java.lang.reflect.Method;
  * Reflection utils to call SharedPreferences$Editor.apply when possible,
  * falling back to commit when apply isn't available.
  */
-public class SharedPreferencesCompat {
+class SharedPreferencesCompat {
     private static final Method sApplyMethod = findApplyMethod();
 
     private static Method findApplyMethod() {
@@ -38,7 +38,7 @@ public class SharedPreferencesCompat {
         return null;
     }
 
-    public static void apply(SharedPreferences.Editor editor) {
+    static void apply(SharedPreferences.Editor editor) {
         if (sApplyMethod != null) {
             try {
                 sApplyMethod.invoke(editor);

@@ -27,6 +27,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -36,19 +37,19 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-public class MediaPickerActivity extends ListActivity implements MusicUtils.Defs
-{
+public class MediaPickerActivity extends ListActivity
+        implements MusicUtils.Defs {
+    private static final String TAG = "MediaPickerActivity";
+
     private ServiceToken mToken;
 
-    public MediaPickerActivity()
-    {
+    public MediaPickerActivity() {
     }
 
-    /** Called when the activity is first created. */
     @Override
-    public void onCreate(Bundle icicle)
+    public void onCreate(Bundle bundle)
     {
-        super.onCreate(icicle);
+        super.onCreate(bundle);
 
         mFirstYear = getIntent().getStringExtra("firstyear");
         mLastYear = getIntent().getStringExtra("lastyear");
@@ -125,6 +126,7 @@ public class MediaPickerActivity extends ListActivity implements MusicUtils.Defs
             try {
                 MusicUtils.sService.stop();
             } catch (RemoteException ex) {
+                Log.e(TAG, "onListItemClick");
             }
         }
         Intent intent = new Intent(Intent.ACTION_VIEW);
@@ -157,7 +159,7 @@ public class MediaPickerActivity extends ListActivity implements MusicUtils.Defs
         // Use ArrayList for the moment, since we don't know the size of
         // Cursor[]. If the length of Corsor[] larger than really used,
         // a NPE will come up when access the content of Corsor[].
-        ArrayList<Cursor> cList = new ArrayList<Cursor>();
+        ArrayList<Cursor> cList = new ArrayList<>();
         Intent intent = getIntent();
         String type = intent.getType();
 
@@ -178,16 +180,17 @@ public class MediaPickerActivity extends ListActivity implements MusicUtils.Defs
         // Array.
 
         Cursor c;
+        String sortOrder = MediaStore.Audio.Media.TITLE + " COLLATE UNICODE";
         if (type.equals("video/*")) {
             // Only video.
             c = MusicUtils.query(this, MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-                    videocols, null , null, mSortOrder);
+                    videocols, null , null, sortOrder);
             if (c != null) {
                 cList.add(c);
             }
         } else {
             c = MusicUtils.query(this, MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                    audiocols, mWhereClause , null, mSortOrder);
+                    audiocols, mWhereClause , null, sortOrder);
 
             if (c != null) {
                 cList.add(c);
@@ -196,7 +199,7 @@ public class MediaPickerActivity extends ListActivity implements MusicUtils.Defs
             if (mFirstYear == null && intent.getType().equals("media/*")) {
                 // video has no year column
                 c = MusicUtils.query(this, MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-                    videocols, null , null, mSortOrder);
+                    videocols, null , null, sortOrder);
                 if (c != null) {
                     cList.add(c);
                 }
@@ -218,12 +221,11 @@ public class MediaPickerActivity extends ListActivity implements MusicUtils.Defs
     }
 
     private Cursor mCursor;
-    private String mSortOrder = MediaStore.Audio.Media.TITLE + " COLLATE UNICODE";
     private String mFirstYear;
     private String mLastYear;
     private String mWhereClause;
 
-    static class PickListAdapter extends SimpleCursorAdapter {
+    private static class PickListAdapter extends SimpleCursorAdapter {
         int mTitleIdx;
         int mArtistIdx;
         int mAlbumIdx;
@@ -280,7 +282,7 @@ public class MediaPickerActivity extends ListActivity implements MusicUtils.Defs
             tv.setText(builder.toString());
 
             String text = cursor.getString(mMimeIdx);
-            ImageView iv = (ImageView) view.findViewById(R.id.icon);;
+            ImageView iv = (ImageView) view.findViewById(R.id.icon);
             if("audio/midi".equals(text)) {
                 iv.setImageResource(R.drawable.midi);
             } else if(text != null && (text.startsWith("audio") ||

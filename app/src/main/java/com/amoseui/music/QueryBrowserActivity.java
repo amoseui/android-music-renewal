@@ -48,30 +48,18 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
 public class QueryBrowserActivity extends ListActivity
-implements MusicUtils.Defs, ServiceConnection
-{
-    private final static int PLAY_NOW = 0;
-    private final static int ADD_TO_QUEUE = 1;
-    private final static int PLAY_NEXT = 2;
-    private final static int PLAY_ARTIST = 3;
-    private final static int EXPLORE_ARTIST = 4;
-    private final static int PLAY_ALBUM = 5;
-    private final static int EXPLORE_ALBUM = 6;
-    private final static int REQUERY = 3;
+        implements MusicUtils.Defs, ServiceConnection {
+
     private QueryListAdapter mAdapter;
     private boolean mAdapterSent;
-    private String mFilterString = "";
     private MusicUtils.ServiceToken mToken;
 
-    public QueryBrowserActivity()
-    {
+    public QueryBrowserActivity() {
     }
 
-    /** Called when the activity is first created. */
     @Override
-    public void onCreate(Bundle icicle)
-    {
-        super.onCreate(icicle);
+    public void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
         mAdapter = (QueryListAdapter) getLastNonConfigurationInstance();
         mToken = MusicUtils.bindToService(this, this);
@@ -119,7 +107,7 @@ implements MusicUtils.Defs, ServiceConnection
             }
         }
 
-        mFilterString = intent.getStringExtra(SearchManager.QUERY);
+        String filterString = intent.getStringExtra(SearchManager.QUERY);
         if (MediaStore.INTENT_ACTION_MEDIA_SEARCH.equals(action)) {
             String focus = intent.getStringExtra(MediaStore.EXTRA_MEDIA_FOCUS);
             String artist = intent.getStringExtra(MediaStore.EXTRA_MEDIA_ARTIST);
@@ -127,17 +115,17 @@ implements MusicUtils.Defs, ServiceConnection
             String title = intent.getStringExtra(MediaStore.EXTRA_MEDIA_TITLE);
             if (focus != null) {
                 if (focus.startsWith("audio/") && title != null) {
-                    mFilterString = title;
+                    filterString = title;
                 } else if (focus.equals(MediaStore.Audio.Albums.ENTRY_CONTENT_TYPE)) {
                     if (album != null) {
-                        mFilterString = album;
+                        filterString = album;
                         if (artist != null) {
-                            mFilterString = mFilterString + " " + artist;
+                            filterString = filterString + " " + artist;
                         }
                     }
                 } else if (focus.equals(MediaStore.Audio.Artists.ENTRY_CONTENT_TYPE)) {
                     if (artist != null) {
-                        mFilterString = artist;
+                        filterString = artist;
                     }
                 }
             }
@@ -155,11 +143,10 @@ implements MusicUtils.Defs, ServiceConnection
                     new String[] {},
                     new int[] {});
             setListAdapter(mAdapter);
-            if (TextUtils.isEmpty(mFilterString)) {
+            if (TextUtils.isEmpty(filterString)) {
                 getQueryCursor(mAdapter.getQueryHandler(), null);
             } else {
-                mTrackList.setFilterText(mFilterString);
-                mFilterString = null;
+                mTrackList.setFilterText(filterString);
             }
         } else {
             mAdapter.setActivity(this);
@@ -168,7 +155,7 @@ implements MusicUtils.Defs, ServiceConnection
             if (mQueryCursor != null) {
                 init(mQueryCursor);
             } else {
-                getQueryCursor(mAdapter.getQueryHandler(), mFilterString);
+                getQueryCursor(mAdapter.getQueryHandler(), filterString);
             }
         }
     }
@@ -334,13 +321,13 @@ implements MusicUtils.Defs, ServiceConnection
         return ret;
     }
     
-    static class QueryListAdapter extends SimpleCursorAdapter {
+    private static class QueryListAdapter extends SimpleCursorAdapter {
         private QueryBrowserActivity mActivity = null;
         private AsyncQueryHandler mQueryHandler;
         private String mConstraint = null;
         private boolean mConstraintIsValid = false;
 
-        class QueryHandler extends AsyncQueryHandler {
+        private class QueryHandler extends AsyncQueryHandler {
             QueryHandler(ContentResolver res) {
                 super(res);
             }
@@ -362,7 +349,7 @@ implements MusicUtils.Defs, ServiceConnection
             mActivity = newactivity;
         }
         
-        public AsyncQueryHandler getQueryHandler() {
+        private AsyncQueryHandler getQueryHandler() {
             return mQueryHandler;
         }
 
@@ -460,9 +447,8 @@ implements MusicUtils.Defs, ServiceConnection
         @Override
         public Cursor runQueryOnBackgroundThread(CharSequence constraint) {
             String s = constraint.toString();
-            if (mConstraintIsValid && (
-                    (s == null && mConstraint == null) ||
-                    (s != null && s.equals(mConstraint)))) {
+            if (mConstraintIsValid &&
+                    (mConstraint == null || s.equals(mConstraint))) {
                 return getCursor();
             }
             Cursor c = mActivity.getQueryCursor(null, s);

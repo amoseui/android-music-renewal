@@ -71,8 +71,8 @@ public class AudioPreview extends Activity implements OnPreparedListener, OnErro
     private boolean mPausedByTransientLossOfFocus;
 
     @Override
-    public void onCreate(Bundle icicle) {
-        super.onCreate(icicle);
+    public void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
         
         Intent intent = getIntent();
         if (intent == null) {
@@ -165,7 +165,7 @@ public class AudioPreview extends Activity implements OnPreparedListener, OnErro
         };
 
         if (scheme.equals(ContentResolver.SCHEME_CONTENT)) {
-            if (mUri.getAuthority() == MediaStore.AUTHORITY) {
+            if (mUri.getAuthority().equals(MediaStore.AUTHORITY)) {
                 // try to get title and artist from the media content provider
                 mAsyncQueryHandler.startQuery(0, null, mUri, new String [] {
                         MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.ARTIST},
@@ -323,7 +323,7 @@ public class AudioPreview extends Activity implements OnPreparedListener, OnErro
         }
     }
 
-    class ProgressRefresher implements Runnable {
+    private class ProgressRefresher implements Runnable {
 
         @Override
         public void run() {
@@ -465,7 +465,7 @@ public class AudioPreview extends Activity implements OnPreparedListener, OnErro
             setOnCompletionListener(mActivity);
         }
 
-        public void setDataSourceAndPrepare(Uri uri) throws IllegalArgumentException,
+        private void setDataSourceAndPrepare(Uri uri) throws IllegalArgumentException,
                         SecurityException, IllegalStateException, IOException {
             setDataSource(mActivity,uri);
             prepareAsync();

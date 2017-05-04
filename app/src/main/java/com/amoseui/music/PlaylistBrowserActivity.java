@@ -76,15 +76,12 @@ public class PlaylistBrowserActivity extends ListActivity
     private boolean mCreateShortcut;
     private ServiceToken mToken;
 
-    public PlaylistBrowserActivity()
-    {
+    public PlaylistBrowserActivity() {
     }
 
-    /** Called when the activity is first created. */
     @Override
-    public void onCreate(Bundle icicle)
-    {
-        super.onCreate(icicle);
+    public void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
 
         final Intent intent = getIntent();
         final String action = intent.getAction();
@@ -281,7 +278,6 @@ public class PlaylistBrowserActivity extends ListActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        Intent intent;
         switch (item.getItemId()) {
             case PARTY_SHUFFLE:
                 MusicUtils.togglePartyShuffle();
@@ -429,6 +425,7 @@ public class PlaylistBrowserActivity extends ListActivity
             }
             MusicUtils.playAll(this, list, 0);
         } catch (SQLiteException ex) {
+            Log.e(TAG, "playRecentlyAdded");
         } finally {
             cursor.close();
         }
@@ -454,6 +451,7 @@ public class PlaylistBrowserActivity extends ListActivity
             }
             MusicUtils.playAll(this, list, 0);
         } catch (SQLiteException ex) {
+            Log.e(TAG, "playPodcasts");
         } finally {
             cursor.close();
         }
@@ -480,7 +478,7 @@ public class PlaylistBrowserActivity extends ListActivity
             for (int i = 0; i < searchWords.length; i++) {
                 keywords[i] = '%' + searchWords[i] + '%';
             }
-            for (int i = 0; i < searchWords.length; i++) {
+            for (String ignored : searchWords) {
                 where.append(" AND ");
                 where.append(MediaStore.Audio.Playlists.NAME + " LIKE ?");
             }
@@ -494,8 +492,8 @@ public class PlaylistBrowserActivity extends ListActivity
                     mCols, whereclause, keywords, MediaStore.Audio.Playlists.NAME);
             return null;
         }
-        Cursor c = null;
-        c = MusicUtils.query(this, MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,
+        Cursor c = MusicUtils.query(
+                this, MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,
                 mCols, whereclause, keywords, MediaStore.Audio.Playlists.NAME);
         
         return mergedCursor(c);
@@ -512,12 +510,12 @@ public class PlaylistBrowserActivity extends ListActivity
         }
         MatrixCursor autoplaylistscursor = new MatrixCursor(mCols);
         if (mCreateShortcut) {
-            ArrayList<Object> all = new ArrayList<Object>(2);
+            ArrayList<Object> all = new ArrayList<>(2);
             all.add(ALL_SONGS_PLAYLIST);
             all.add(getString(R.string.play_all));
             autoplaylistscursor.addRow(all);
         }
-        ArrayList<Object> recent = new ArrayList<Object>(2);
+        ArrayList<Object> recent = new ArrayList<>(2);
         recent.add(RECENTLY_ADDED_PLAYLIST);
         recent.add(getString(R.string.recentlyadded));
         autoplaylistscursor.addRow(recent);
@@ -530,18 +528,17 @@ public class PlaylistBrowserActivity extends ListActivity
             int numpodcasts = counter.getInt(0);
             counter.close();
             if (numpodcasts > 0) {
-                ArrayList<Object> podcasts = new ArrayList<Object>(2);
+                ArrayList<Object> podcasts = new ArrayList<>(2);
                 podcasts.add(PODCASTS_PLAYLIST);
                 podcasts.add(getString(R.string.podcasts_listitem));
                 autoplaylistscursor.addRow(podcasts);
             }
         }
 
-        Cursor cc = new MergeCursor(new Cursor [] {autoplaylistscursor, c});
-        return cc;
+        return new MergeCursor(new Cursor [] {autoplaylistscursor, c});
     }
     
-    static class PlaylistListAdapter extends SimpleCursorAdapter {
+    private static class PlaylistListAdapter extends SimpleCursorAdapter {
         int mTitleIdx;
         int mIdIdx;
         private PlaylistBrowserActivity mActivity = null;
@@ -571,6 +568,7 @@ public class PlaylistBrowserActivity extends ListActivity
             getColumnIndices(cursor);
             mQueryHandler = new QueryHandler(context.getContentResolver());
         }
+
         private void getColumnIndices(Cursor cursor) {
             if (cursor != null) {
                 mTitleIdx = cursor.getColumnIndexOrThrow(MediaStore.Audio.Playlists.NAME);
@@ -582,7 +580,7 @@ public class PlaylistBrowserActivity extends ListActivity
             mActivity = newactivity;
         }
         
-        public AsyncQueryHandler getQueryHandler() {
+        private AsyncQueryHandler getQueryHandler() {
             return mQueryHandler;
         }
 
@@ -629,8 +627,7 @@ public class PlaylistBrowserActivity extends ListActivity
         public Cursor runQueryOnBackgroundThread(CharSequence constraint) {
             String s = constraint.toString();
             if (mConstraintIsValid && (
-                    (s == null && mConstraint == null) ||
-                    (s != null && s.equals(mConstraint)))) {
+                     mConstraint == null || s.equals(mConstraint))) {
                 return getCursor();
             }
             Cursor c = mActivity.getPlaylistCursor(null, s);

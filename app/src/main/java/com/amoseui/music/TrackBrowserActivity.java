@@ -65,10 +65,11 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 import java.util.Arrays;
 
 public class TrackBrowserActivity extends ListActivity
-        implements View.OnCreateContextMenuListener, MusicUtils.Defs, ServiceConnection
-{
-    private static final int Q_SELECTED = CHILD_MENU_BASE;
-    private static final int Q_ALL = CHILD_MENU_BASE + 1;
+        implements View.OnCreateContextMenuListener,
+        MusicUtils.Defs, ServiceConnection {
+
+    private static final String TAG = "TrackBrowserActivity";
+
     private static final int SAVE_AS_PLAYLIST = CHILD_MENU_BASE + 2;
     private static final int PLAY_ALL = CHILD_MENU_BASE + 3;
     private static final int CLEAR_PLAYLIST = CHILD_MENU_BASE + 4;
@@ -93,7 +94,6 @@ public class TrackBrowserActivity extends ListActivity
     private String mArtistId;
     private String mPlaylist;
     private String mGenre;
-    private String mSortOrder;
     private int mSelectedPosition;
     private long mSelectedId;
     private static int mLastListPosCourse = -1;
@@ -101,15 +101,12 @@ public class TrackBrowserActivity extends ListActivity
     private boolean mUseLastListPos = false;
     private ServiceToken mToken;
 
-    public TrackBrowserActivity()
-    {
+    public TrackBrowserActivity() {
     }
 
-    /** Called when the activity is first created. */
     @Override
-    public void onCreate(Bundle icicle)
-    {
-        super.onCreate(icicle);
+    public void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         Intent intent = getIntent();
         if (intent != null) {
@@ -118,13 +115,13 @@ public class TrackBrowserActivity extends ListActivity
             }
         }
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
-        if (icicle != null) {
-            mSelectedId = icicle.getLong("selectedtrack");
-            mAlbumId = icicle.getString("album");
-            mArtistId = icicle.getString("artist");
-            mPlaylist = icicle.getString("playlist");
-            mGenre = icicle.getString("genre");
-            mEditMode = icicle.getBoolean("editmode", false);
+        if (bundle != null) {
+            mSelectedId = bundle.getLong("selectedtrack");
+            mAlbumId = bundle.getString("album");
+            mArtistId = bundle.getString("artist");
+            mPlaylist = bundle.getString("playlist");
+            mGenre = bundle.getString("genre");
+            mEditMode = bundle.getBoolean("editmode", false);
         } else {
             mAlbumId = intent.getStringExtra("album");
             // If we have an album, show everything on the album, not just stuff
@@ -399,6 +396,7 @@ public class TrackBrowserActivity extends ListActivity
                 registerReceiver(mNowPlayingListener, new IntentFilter(f));
                 mNowPlayingListener.onReceive(this, new Intent(MediaPlaybackService.META_CHANGED));
             } catch (RemoteException ex) {
+                Log.e(TAG, "init");
             }
         } else {
             String key = getIntent().getStringExtra("artist");
@@ -430,6 +428,7 @@ public class TrackBrowserActivity extends ListActivity
                     return;
                 }
             } catch (Exception ex) {
+                Log.e(TAG, "setAlbumArtBackground");
             }
         }
         mTrackList.setBackgroundColor(0xff000000);
@@ -469,30 +468,35 @@ public class TrackBrowserActivity extends ListActivity
                 }
             }
         } else if (mPlaylist != null) {
-            if (mPlaylist.equals("nowplaying")) {
-                if (MusicUtils.getCurrentShuffleMode() == MediaPlaybackService.SHUFFLE_AUTO) {
-                    fancyName = getText(R.string.partyshuffle_title);
-                } else {
-                    fancyName = getText(R.string.nowplaying_title);
-                }
-            } else if (mPlaylist.equals("podcasts")){
-                fancyName = getText(R.string.podcasts_title);
-            } else if (mPlaylist.equals("recentlyadded")){
-                fancyName = getText(R.string.recentlyadded_title);
-            } else {
-                String [] cols = new String [] {
-                MediaStore.Audio.Playlists.NAME
-                };
-                Cursor cursor = MusicUtils.query(this,
-                        ContentUris.withAppendedId(Playlists.EXTERNAL_CONTENT_URI, Long.valueOf(mPlaylist)),
-                        cols, null, null, null);
-                if (cursor != null) {
-                    if (cursor.getCount() != 0) {
-                        cursor.moveToFirst();
-                        fancyName = cursor.getString(0);
+            switch (mPlaylist) {
+                case "nowplaying":
+                    if (MusicUtils.getCurrentShuffleMode() == MediaPlaybackService.SHUFFLE_AUTO) {
+                        fancyName = getText(R.string.partyshuffle_title);
+                    } else {
+                        fancyName = getText(R.string.nowplaying_title);
                     }
-                    cursor.deactivate();
-                }
+                    break;
+                case "podcasts":
+                    fancyName = getText(R.string.podcasts_title);
+                    break;
+                case "recentlyadded":
+                    fancyName = getText(R.string.recentlyadded_title);
+                    break;
+                default:
+                    String[] cols = new String[]{
+                            Playlists.NAME
+                    };
+                    Cursor cursor = MusicUtils.query(this,
+                            ContentUris.withAppendedId(Playlists.EXTERNAL_CONTENT_URI, Long.valueOf(mPlaylist)),
+                            cols, null, null, null);
+                    if (cursor != null) {
+                        if (cursor.getCount() != 0) {
+                            cursor.moveToFirst();
+                            fancyName = cursor.getString(0);
+                        }
+                        cursor.deactivate();
+                    }
+                    break;
             }
         } else if (mGenre != null) {
             String [] cols = new String [] {
@@ -743,8 +747,8 @@ public class TrackBrowserActivity extends ListActivity
     }
 
     void doSearch() {
-        CharSequence title = null;
-        String query = null;
+        CharSequence title;
+        String query;
         
         Intent i = new Intent();
         i.setAction(MediaStore.INTENT_ACTION_MEDIA_SEARCH);
@@ -808,6 +812,7 @@ public class TrackBrowserActivity extends ListActivity
                     mDeletedOneRow = true;
                 }
             } catch (RemoteException ex) {
+                Log.e(TAG, "removeItem");
             }
             View v = mTrackList.getSelectedView();
             v.setVisibility(View.GONE);
@@ -895,6 +900,7 @@ public class TrackBrowserActivity extends ListActivity
                     MusicUtils.sService.setQueuePosition(position);
                     return;
                 } catch (RemoteException ex) {
+                    Log.e(TAG, "onListItemClick");
                 }
             }
         }
@@ -1003,7 +1009,8 @@ public class TrackBrowserActivity extends ListActivity
         }
     }
     
-    private Cursor getTrackCursor(TrackListAdapter.TrackQueryHandler queryhandler, String filter,
+    private Cursor getTrackCursor(
+            TrackListAdapter.TrackQueryHandler queryhandler, String filter,
             boolean async) {
 
         if (queryhandler == null) {
@@ -1011,7 +1018,7 @@ public class TrackBrowserActivity extends ListActivity
         }
 
         Cursor ret = null;
-        mSortOrder = MediaStore.Audio.Media.TITLE_KEY;
+        String sortOrder = MediaStore.Audio.Media.TITLE_KEY;
         StringBuilder where = new StringBuilder();
         where.append(MediaStore.Audio.Media.TITLE + " != ''");
 
@@ -1021,57 +1028,65 @@ public class TrackBrowserActivity extends ListActivity
             if (!TextUtils.isEmpty(filter)) {
                 uri = uri.buildUpon().appendQueryParameter("filter", Uri.encode(filter)).build();
             }
-            mSortOrder = MediaStore.Audio.Genres.Members.DEFAULT_SORT_ORDER;
+            sortOrder = MediaStore.Audio.Genres.Members.DEFAULT_SORT_ORDER;
             ret = queryhandler.doQuery(uri,
-                    mCursorCols, where.toString(), null, mSortOrder, async);
+                    mCursorCols, where.toString(), null, sortOrder, async);
         } else if (mPlaylist != null) {
-            if (mPlaylist.equals("nowplaying")) {
-                if (MusicUtils.sService != null) {
-                    ret = new NowPlayingCursor(MusicUtils.sService, mCursorCols);
-                    if (ret.getCount() == 0) {
-                        finish();
+            switch (mPlaylist) {
+                case "nowplaying":
+                    if (MusicUtils.sService != null) {
+                        ret = new NowPlayingCursor(MusicUtils.sService, mCursorCols);
+                        if (ret.getCount() == 0) {
+                            finish();
+                        }
                     }
-                } else {
-                    // Nothing is playing.
+                    break;
+                case "podcasts": {
+                    where.append(" AND " + MediaStore.Audio.Media.IS_PODCAST + "=1");
+                    Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                    if (!TextUtils.isEmpty(filter)) {
+                        uri = uri.buildUpon().appendQueryParameter("filter", Uri.encode(filter)).build();
+                    }
+                    ret = queryhandler.doQuery(uri,
+                            mCursorCols, where.toString(), null,
+                            MediaStore.Audio.Media.DEFAULT_SORT_ORDER, async);
+                    break;
                 }
-            } else if (mPlaylist.equals("podcasts")) {
-                where.append(" AND " + MediaStore.Audio.Media.IS_PODCAST + "=1");
-                Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-                if (!TextUtils.isEmpty(filter)) {
-                    uri = uri.buildUpon().appendQueryParameter("filter", Uri.encode(filter)).build();
+                case "recentlyadded": {
+                    // do a query for all songs added in the last X weeks
+                    Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                    if (!TextUtils.isEmpty(filter)) {
+                        uri = uri.buildUpon().appendQueryParameter("filter", Uri.encode(filter)).build();
+                    }
+                    int X = MusicUtils.getIntPref(this, "numweeks", 2) * (3600 * 24 * 7);
+                    where.append(" AND " + MediaStore.MediaColumns.DATE_ADDED + ">");
+                    where.append(System.currentTimeMillis() / 1000 - X);
+                    ret = queryhandler.doQuery(uri,
+                            mCursorCols, where.toString(), null,
+                            MediaStore.Audio.Media.DEFAULT_SORT_ORDER, async);
+                    break;
                 }
-                ret = queryhandler.doQuery(uri,
-                        mCursorCols, where.toString(), null,
-                        MediaStore.Audio.Media.DEFAULT_SORT_ORDER, async);
-            } else if (mPlaylist.equals("recentlyadded")) {
-                // do a query for all songs added in the last X weeks
-                Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-                if (!TextUtils.isEmpty(filter)) {
-                    uri = uri.buildUpon().appendQueryParameter("filter", Uri.encode(filter)).build();
+                default: {
+                    Uri uri = Playlists.Members.getContentUri("external",
+                            Long.valueOf(mPlaylist));
+                    if (!TextUtils.isEmpty(filter)) {
+                        uri = uri.buildUpon().appendQueryParameter("filter", Uri.encode(filter)).build();
+                    }
+                    sortOrder = Playlists.Members.DEFAULT_SORT_ORDER;
+                    ret = queryhandler.doQuery(uri, mPlaylistMemberCols,
+                            where.toString(), null, sortOrder, async);
+                    break;
                 }
-                int X = MusicUtils.getIntPref(this, "numweeks", 2) * (3600 * 24 * 7);
-                where.append(" AND " + MediaStore.MediaColumns.DATE_ADDED + ">");
-                where.append(System.currentTimeMillis() / 1000 - X);
-                ret = queryhandler.doQuery(uri,
-                        mCursorCols, where.toString(), null,
-                        MediaStore.Audio.Media.DEFAULT_SORT_ORDER, async);
-            } else {
-                Uri uri = MediaStore.Audio.Playlists.Members.getContentUri("external",
-                        Long.valueOf(mPlaylist));
-                if (!TextUtils.isEmpty(filter)) {
-                    uri = uri.buildUpon().appendQueryParameter("filter", Uri.encode(filter)).build();
-                }
-                mSortOrder = MediaStore.Audio.Playlists.Members.DEFAULT_SORT_ORDER;
-                ret = queryhandler.doQuery(uri, mPlaylistMemberCols,
-                        where.toString(), null, mSortOrder, async);
             }
         } else {
             if (mAlbumId != null) {
-                where.append(" AND " + MediaStore.Audio.Media.ALBUM_ID + "=" + mAlbumId);
-                mSortOrder = MediaStore.Audio.Media.TRACK + ", " + mSortOrder;
+                where.append(" AND " + MediaStore.Audio.Media.ALBUM_ID + "=")
+                        .append(mAlbumId);
+                sortOrder = MediaStore.Audio.Media.TRACK + ", " + sortOrder;
             }
             if (mArtistId != null) {
-                where.append(" AND " + MediaStore.Audio.Media.ARTIST_ID + "=" + mArtistId);
+                where.append(" AND " + MediaStore.Audio.Media.ARTIST_ID + "=")
+                        .append(mArtistId);
             }
             where.append(" AND " + MediaStore.Audio.Media.IS_MUSIC + "=1");
             Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
@@ -1079,7 +1094,7 @@ public class TrackBrowserActivity extends ListActivity
                 uri = uri.buildUpon().appendQueryParameter("filter", Uri.encode(filter)).build();
             }
             ret = queryhandler.doQuery(uri,
-                    mCursorCols, where.toString() , null, mSortOrder, async);
+                    mCursorCols, where.toString() , null, sortOrder, async);
         }
         
         // This special case is for the "nowplaying" cursor, which cannot be handled
@@ -1091,14 +1106,14 @@ public class TrackBrowserActivity extends ListActivity
         return ret;
     }
 
-    private class NowPlayingCursor extends AbstractCursor
-    {
-        public NowPlayingCursor(IMediaPlaybackService service, String [] cols)
-        {
+    private class NowPlayingCursor extends AbstractCursor {
+
+        NowPlayingCursor(IMediaPlaybackService service, String [] cols) {
             mCols = cols;
             mService  = service;
             makeNowPlayingCursor();
         }
+
         private void makeNowPlayingCursor() {
             mCurrentPlaylistCursor = null;
             try {
@@ -1160,7 +1175,6 @@ public class TrackBrowserActivity extends ListActivity
                     mSize = mNowPlaying.length;
                     if (mSize == 0) {
                         mCursorIdxs = null;
-                        return;
                     }
                 }
             } catch (RemoteException ex) {
@@ -1175,8 +1189,7 @@ public class TrackBrowserActivity extends ListActivity
         }
 
         @Override
-        public boolean onMove(int oldPosition, int newPosition)
-        {
+        public boolean onMove(int oldPosition, int newPosition) {
             if (oldPosition == newPosition)
                 return true;
             
@@ -1196,30 +1209,31 @@ public class TrackBrowserActivity extends ListActivity
             return true;
         }
 
-        public boolean removeItem(int which)
-        {
+        boolean removeItem(int which) {
             try {
                 if (mService.removeTracks(which, which) == 0) {
                     return false; // delete failed
                 }
-                int i = (int) which;
+                int i = which;
                 mSize--;
                 while (i < mSize) {
                     mNowPlaying[i] = mNowPlaying[i+1];
                     i++;
                 }
-                onMove(-1, (int) mCurPos);
+                onMove(-1, mCurPos);
             } catch (RemoteException ex) {
+                Log.e(TAG, "removeItem");
             }
             return true;
         }
         
-        public void moveItem(int from, int to) {
+        void moveItem(int from, int to) {
             try {
                 mService.moveQueueItem(from, to);
                 mNowPlaying = mService.getQueue();
                 onMove(-1, mCurPos); // update the underlying cursor
             } catch (RemoteException ex) {
+                Log.e(TAG, "moveItem");
             }
         }
 
@@ -1304,15 +1318,13 @@ public class TrackBrowserActivity extends ListActivity
         }
         
         @Override
-        public void deactivate()
-        {
+        public void deactivate() {
             if (mCurrentPlaylistCursor != null)
                 mCurrentPlaylistCursor.deactivate();
         }
 
         @Override
-        public boolean requery()
-        {
+        public boolean requery() {
             makeNowPlayingCursor();
             return true;
         }
@@ -1326,7 +1338,8 @@ public class TrackBrowserActivity extends ListActivity
         private IMediaPlaybackService mService;
     }
     
-    static class TrackListAdapter extends SimpleCursorAdapter implements SectionIndexer {
+    private static class TrackListAdapter extends SimpleCursorAdapter
+            implements SectionIndexer {
         boolean mIsNowPlaying;
         boolean mDisableNowPlayingIndicator;
 
@@ -1337,7 +1350,6 @@ public class TrackBrowserActivity extends ListActivity
 
         private final StringBuilder mBuilder = new StringBuilder();
         private final String mUnknownArtist;
-        private final String mUnknownAlbum;
         
         private AlphabetIndexer mIndexer;
         
@@ -1359,17 +1371,17 @@ public class TrackBrowserActivity extends ListActivity
 
             class QueryArgs {
                 public Uri uri;
-                public String [] projection;
-                public String selection;
-                public String [] selectionArgs;
-                public String orderBy;
+                String[] projection;
+                String selection;
+                String[] selectionArgs;
+                String orderBy;
             }
 
             TrackQueryHandler(ContentResolver res) {
                 super(res);
             }
             
-            public Cursor doQuery(Uri uri, String[] projection,
+            Cursor doQuery(Uri uri, String[] projection,
                     String selection, String[] selectionArgs,
                     String orderBy, boolean async) {
                 if (async) {
@@ -1412,7 +1424,6 @@ public class TrackBrowserActivity extends ListActivity
             mIsNowPlaying = isnowplaying;
             mDisableNowPlayingIndicator = disablenowplayingindicator;
             mUnknownArtist = context.getString(R.string.unknown_artist_name);
-            mUnknownAlbum = context.getString(R.string.unknown_album_name);
             
             mQueryHandler = new TrackQueryHandler(context.getContentResolver());
         }
@@ -1421,7 +1432,7 @@ public class TrackBrowserActivity extends ListActivity
             mActivity = newactivity;
         }
         
-        public TrackQueryHandler getQueryHandler() {
+        TrackQueryHandler getQueryHandler() {
             return mQueryHandler;
         }
         
@@ -1506,6 +1517,7 @@ public class TrackBrowserActivity extends ListActivity
                         id = MusicUtils.sService.getAudioId();
                     }
                 } catch (RemoteException ex) {
+                    Log.e(TAG, "bindView");
                 }
             }
             
@@ -1545,9 +1557,8 @@ public class TrackBrowserActivity extends ListActivity
         @Override
         public Cursor runQueryOnBackgroundThread(CharSequence constraint) {
             String s = constraint.toString();
-            if (mConstraintIsValid && (
-                    (s == null && mConstraint == null) ||
-                    (s != null && s.equals(mConstraint)))) {
+            if (mConstraintIsValid &&
+                    (mConstraint == null || s.equals(mConstraint))) {
                 return getCursor();
             }
             Cursor c = mActivity.getTrackCursor(mQueryHandler, s, false);

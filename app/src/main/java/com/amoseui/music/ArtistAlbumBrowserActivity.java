@@ -73,18 +73,17 @@ public class ArtistAlbumBrowserActivity extends ExpandableListActivity
     private static int mLastListPosFine = -1;
     private MusicUtils.ServiceToken mToken;
 
-    /** Called when the activity is first created. */
     @Override
-    public void onCreate(Bundle icicle) {
-        super.onCreate(icicle);
+    public void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
-        if (icicle != null) {
-            mCurrentAlbumId = icicle.getString("selectedalbum");
-            mCurrentAlbumName = icicle.getString("selectedalbumname");
-            mCurrentArtistId = icicle.getString("selectedartist");
-            mCurrentArtistName = icicle.getString("selectedartistname");
+        if (bundle != null) {
+            mCurrentAlbumId = bundle.getString("selectedalbum");
+            mCurrentAlbumName = bundle.getString("selectedalbumname");
+            mCurrentArtistId = bundle.getString("selectedartist");
+            mCurrentArtistName = bundle.getString("selectedartistname");
         }
         mToken = MusicUtils.bindToService(this, this);
 
@@ -195,6 +194,7 @@ public class ArtistAlbumBrowserActivity extends ExpandableListActivity
             MusicUtils.updateNowPlaying(ArtistAlbumBrowserActivity.this);
         }
     };
+
     private BroadcastReceiver mScanListener = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -288,7 +288,6 @@ public class ArtistAlbumBrowserActivity extends ExpandableListActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        Intent intent;
         Cursor cursor;
         switch (item.getItemId()) {
             case PARTY_SHUFFLE:
@@ -341,7 +340,6 @@ public class ArtistAlbumBrowserActivity extends ExpandableListActivity
                 menu.setHeaderTitle(mCurrentArtistName);
                 menu.add(0, SEARCH, 0, R.string.search_title);
             }
-            return;
         } else if (itemtype == ExpandableListView.PACKED_POSITION_TYPE_CHILD) {
             if (cpos == -1) {
                 // this shouldn't happen
@@ -453,8 +451,8 @@ public class ArtistAlbumBrowserActivity extends ExpandableListActivity
     }
 
     void doSearch() {
-        CharSequence title = null;
-        String query = null;
+        CharSequence title;
+        String query;
         
         Intent i = new Intent();
         i.setAction(MediaStore.INTENT_ACTION_MEDIA_SEARCH);
@@ -537,7 +535,7 @@ public class ArtistAlbumBrowserActivity extends ExpandableListActivity
         return ret;
     }
     
-    static class ArtistAlbumListAdapter extends SimpleCursorTreeAdapter implements SectionIndexer {
+    private static class ArtistAlbumListAdapter extends SimpleCursorTreeAdapter implements SectionIndexer {
         
         private final Drawable mNowPlayingOverlay;
         private final BitmapDrawable mDefaultAlbumIcon;
@@ -545,9 +543,7 @@ public class ArtistAlbumBrowserActivity extends ExpandableListActivity
         private int mGroupArtistIdx;
         private int mGroupAlbumIdx;
         private int mGroupSongIdx;
-        private final Context mContext;
         private final Resources mResources;
-        private final String mAlbumSongSeparator;
         private final String mUnknownAlbum;
         private final String mUnknownArtist;
         private final StringBuilder mBuffer = new StringBuilder();
@@ -592,10 +588,8 @@ public class ArtistAlbumBrowserActivity extends ExpandableListActivity
             mDefaultAlbumIcon.setFilterBitmap(false);
             mDefaultAlbumIcon.setDither(false);
             
-            mContext = context;
             getColumnIndices(cursor);
             mResources = context.getResources();
-            mAlbumSongSeparator = context.getString(R.string.albumsongseparator);
             mUnknownAlbum = context.getString(R.string.unknown_album_name);
             mUnknownArtist = context.getString(R.string.unknown_artist_name);
         }
@@ -619,7 +613,7 @@ public class ArtistAlbumBrowserActivity extends ExpandableListActivity
             mActivity = newactivity;
         }
         
-        public AsyncQueryHandler getQueryHandler() {
+        private AsyncQueryHandler getQueryHandler() {
             return mQueryHandler;
         }
 
@@ -766,9 +760,10 @@ public class ArtistAlbumBrowserActivity extends ExpandableListActivity
                     cols, null, null, MediaStore.Audio.Albums.DEFAULT_SORT_ORDER);
             
             class MyCursorWrapper extends CursorWrapper {
-                String mArtistName;
-                int mMagicColumnIdx;
-                MyCursorWrapper(Cursor c, String artist) {
+                private String mArtistName;
+                private int mMagicColumnIdx;
+
+                private MyCursorWrapper(Cursor c, String artist) {
                     super(c);
                     mArtistName = artist;
                     if (mArtistName == null || mArtistName.equals(MediaStore.UNKNOWN_STRING)) {
@@ -826,8 +821,7 @@ public class ArtistAlbumBrowserActivity extends ExpandableListActivity
         public Cursor runQueryOnBackgroundThread(CharSequence constraint) {
             String s = constraint.toString();
             if (mConstraintIsValid && (
-                    (s == null && mConstraint == null) ||
-                    (s != null && s.equals(mConstraint)))) {
+                    mConstraint == null || s.equals(mConstraint))) {
                 return getCursor();
             }
             Cursor c = mActivity.getArtistCursor(null, s);

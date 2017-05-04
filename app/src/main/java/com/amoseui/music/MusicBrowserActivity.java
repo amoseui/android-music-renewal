@@ -26,24 +26,25 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 
 import com.amoseui.music.MusicUtils.ServiceToken;
 
 public class MusicBrowserActivity extends Activity implements MusicUtils.Defs {
+
+    private static final String TAG = "MusicBrowserActivity";
 
     private final int PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE = 0;
 
     private ServiceToken mToken;
 
     public MusicBrowserActivity() {
+
     }
 
-    /**
-     * Called when the activity is first created.
-     */
     @Override
-    public void onCreate(Bundle icicle) {
-        super.onCreate(icicle);
+    public void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
         requestRuntimePermission();
     }
 
@@ -61,12 +62,14 @@ public class MusicBrowserActivity extends Activity implements MusicUtils.Defs {
             try {
                 unbindService(this);
             } catch (IllegalArgumentException e) {
+                Log.e(TAG, "onServiceConnected");
             }
             IMediaPlaybackService serv = IMediaPlaybackService.Stub.asInterface(obj);
             if (serv != null) {
                 try {
                     serv.setShuffleMode(MediaPlaybackService.SHUFFLE_AUTO);
                 } catch (RemoteException ex) {
+                    Log.e(TAG, "onServiceConnected");
                 }
             }
         }
@@ -99,7 +102,6 @@ public class MusicBrowserActivity extends Activity implements MusicUtils.Defs {
                 } else {
                     finish();
                 }
-                return;
             }
         }
     }

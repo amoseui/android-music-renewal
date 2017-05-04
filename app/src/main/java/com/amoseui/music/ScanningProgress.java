@@ -60,8 +60,8 @@ public class ScanningProgress extends Activity
     };
 
     @Override
-    public void onCreate(Bundle icicle) {
-        super.onCreate(icicle);
+    public void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);

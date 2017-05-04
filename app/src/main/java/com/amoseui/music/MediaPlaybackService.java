@@ -936,7 +936,6 @@ public class MediaPlaybackService extends Service {
                 addToPlayList(list, -1);
                 notifyChange(QUEUE_CHANGED);
             }
-            int oldpos = mPlayPos;
             if (position >= 0) {
                 mPlayPos = position;
             } else {
@@ -1304,7 +1303,7 @@ public class MediaPlaybackService extends Service {
                     return;
                 }
                 Integer pos = mHistory.remove(histsize - 1);
-                mPlayPos = pos.intValue();
+                mPlayPos = pos;
             } else {
                 if (mPlayPos > 0) {
                     mPlayPos--;
@@ -1482,7 +1481,7 @@ public class MediaPlaybackService extends Service {
             // pick something at random from the list
 
             int lookback = mHistory.size();
-            int idx = -1;
+            int idx;
             while(true) {
                 idx = mRand.nextInt(mAutoShuffleList.length);
                 if (!wasRecentlyUsed(idx, lookback)) {

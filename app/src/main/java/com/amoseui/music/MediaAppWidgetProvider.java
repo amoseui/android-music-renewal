@@ -32,7 +32,7 @@ import android.widget.RemoteViews;
  * with play/pause and next track buttons.  
  */
 public class MediaAppWidgetProvider extends AppWidgetProvider {
-    static final String TAG = "MusicAppWidgetProvider";
+    private static final String TAG = "MusicAppWidgetProvider";
     
     public static final String CMDAPPWIDGETUPDATE = "appwidgetupdate";
 
@@ -163,7 +163,7 @@ public class MediaAppWidgetProvider extends AppWidgetProvider {
     }
 
     /**
-     * Link up various button actions using {@link PendingIntents}.
+     * Link up various button actions using {@link PendingIntent}.
      * 
      * @param playerActive True if player is active in background, which means
      *            widget click will launch {@link MediaPlaybackActivity},

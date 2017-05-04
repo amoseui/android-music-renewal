@@ -34,17 +34,15 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class RenamePlaylist extends Activity
-{
+public class RenamePlaylist extends Activity {
     private EditText mPlaylist;
-    private TextView mPrompt;
     private Button mSaveButton;
     private long mRenameId;
     private String mOriginalName;
 
     @Override
-    public void onCreate(Bundle icicle) {
-        super.onCreate(icicle);
+    public void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -52,21 +50,21 @@ public class RenamePlaylist extends Activity
         getWindow().setLayout(WindowManager.LayoutParams.MATCH_PARENT,
                                     WindowManager.LayoutParams.WRAP_CONTENT);
 
-        mPrompt = (TextView)findViewById(R.id.prompt);
+        TextView prompt = (TextView)findViewById(R.id.prompt);
         mPlaylist = (EditText)findViewById(R.id.playlist);
         mSaveButton = (Button) findViewById(R.id.create);
         mSaveButton.setOnClickListener(mOpenClicked);
 
-        ((Button)findViewById(R.id.cancel)).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.cancel).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 finish();
             }
         });
 
-        mRenameId = icicle != null ? icicle.getLong("rename")
+        mRenameId = bundle != null ? bundle.getLong("rename")
                 : getIntent().getLongExtra("rename", -1);
         mOriginalName = nameForId(mRenameId);
-        String defaultname = icicle != null ? icicle.getString("defaultname") : mOriginalName;
+        String defaultname = bundle != null ? bundle.getString("defaultname") : mOriginalName;
         
         if (mRenameId < 0 || mOriginalName == null || defaultname == null) {
             Log.i("@@@@", "Rename failed: " + mRenameId + "/" + defaultname);
@@ -80,9 +78,9 @@ public class RenamePlaylist extends Activity
         } else {
             promptformat = getString(R.string.rename_playlist_diff_prompt);
         }
-                
-        String prompt = String.format(promptformat, mOriginalName, defaultname);
-        mPrompt.setText(prompt);
+
+        prompt.setText(
+                String.format(promptformat, mOriginalName, defaultname));
         mPlaylist.setText(defaultname);
         mPlaylist.setSelection(defaultname.length());
         mPlaylist.addTextChangedListener(mTextWatcher);
@@ -90,13 +88,16 @@ public class RenamePlaylist extends Activity
     }
     
     TextWatcher mTextWatcher = new TextWatcher() {
+
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             // don't care about this one
         }
+
         public void onTextChanged(CharSequence s, int start, int before, int count) {
             // check if playlist with current name exists already, and warn the user if so.
             setSaveButton();
-        };
+        }
+
         public void afterTextChanged(Editable s) {
             // don't care about this one
         }
@@ -167,7 +168,7 @@ public class RenamePlaylist extends Activity
     private View.OnClickListener mOpenClicked = new View.OnClickListener() {
         public void onClick(View v) {
             String name = mPlaylist.getText().toString();
-            if (name != null && name.length() > 0) {
+            if (name.length() > 0) {
                 ContentResolver resolver = getContentResolver();
                 ContentValues values = new ContentValues(1);
                 values.put(MediaStore.Audio.Playlists.NAME, name);

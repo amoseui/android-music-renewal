@@ -35,15 +35,14 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-public class CreatePlaylist extends Activity
-{
+public class CreatePlaylist extends Activity {
     private EditText mPlaylist;
     private TextView mPrompt;
     private Button mSaveButton;
 
     @Override
-    public void onCreate(Bundle icicle) {
-        super.onCreate(icicle);
+    public void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -56,13 +55,13 @@ public class CreatePlaylist extends Activity
         mSaveButton = (Button) findViewById(R.id.create);
         mSaveButton.setOnClickListener(mOpenClicked);
 
-        ((Button)findViewById(R.id.cancel)).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.cancel).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 finish();
             }
         });
         
-        String defaultname = icicle != null ? icicle.getString("defaultname") : makePlaylistName();
+        String defaultname = bundle != null ? bundle.getString("defaultname") : makePlaylistName();
         if (defaultname == null) {
             finish();
             return;
@@ -76,9 +75,11 @@ public class CreatePlaylist extends Activity
     }
     
     TextWatcher mTextWatcher = new TextWatcher() {
+
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             // don't care about this one
         }
+
         public void onTextChanged(CharSequence s, int start, int before, int count) {
             String newText = mPlaylist.getText().toString();
             if (newText.trim().length() == 0) {
@@ -92,7 +93,8 @@ public class CreatePlaylist extends Activity
                     mSaveButton.setText(R.string.create_playlist_create_text);
                 }
             }
-        };
+        }
+
         public void afterTextChanged(Editable s) {
             // don't care about this one
         }
@@ -171,7 +173,7 @@ public class CreatePlaylist extends Activity
     private View.OnClickListener mOpenClicked = new View.OnClickListener() {
         public void onClick(View v) {
             String name = mPlaylist.getText().toString();
-            if (name != null && name.length() > 0) {
+            if (name.length() > 0) {
                 ContentResolver resolver = getContentResolver();
                 int id = idForplaylist(name);
                 Uri uri;

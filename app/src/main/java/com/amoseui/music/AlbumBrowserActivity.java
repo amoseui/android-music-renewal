@@ -73,21 +73,18 @@ public class AlbumBrowserActivity extends ListActivity
     private static int mLastListPosFine = -1;
     private ServiceToken mToken;
 
-    public AlbumBrowserActivity()
-    {
+    public AlbumBrowserActivity() {
     }
 
-    /** Called when the activity is first created. */
     @Override
-    public void onCreate(Bundle icicle)
-    {
-        if (icicle != null) {
-            mCurrentAlbumId = icicle.getString("selectedalbum");
-            mArtistId = icicle.getString("artist");
+    public void onCreate(Bundle bundle) {
+        if (bundle != null) {
+            mCurrentAlbumId = bundle.getString("selectedalbum");
+            mArtistId = bundle.getString("artist");
         } else {
             mArtistId = getIntent().getStringExtra("artist");
         }
-        super.onCreate(icicle);
+        super.onCreate(bundle);
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
@@ -344,14 +341,13 @@ public class AlbumBrowserActivity extends ListActivity
     }
 
     void doSearch() {
-        CharSequence title = null;
+        CharSequence title = "";
         String query = "";
         
         Intent i = new Intent();
         i.setAction(MediaStore.INTENT_ACTION_MEDIA_SEARCH);
         i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        
-        title = "";
+
         if (!mIsUnknownAlbum) {
             query = mCurrentAlbumName;
             i.putExtra(MediaStore.EXTRA_MEDIA_ALBUM, mCurrentAlbumName);
@@ -420,7 +416,6 @@ public class AlbumBrowserActivity extends ListActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        Intent intent;
         Cursor cursor;
         switch (item.getItemId()) {
             case PARTY_SHUFFLE:
@@ -481,7 +476,7 @@ public class AlbumBrowserActivity extends ListActivity
         return ret;
     }
     
-    static class AlbumListAdapter extends SimpleCursorAdapter implements SectionIndexer {
+    private static class AlbumListAdapter extends SimpleCursorAdapter implements SectionIndexer {
         
         private final Drawable mNowPlayingOverlay;
         private final BitmapDrawable mDefaultAlbumIcon;
@@ -489,11 +484,8 @@ public class AlbumBrowserActivity extends ListActivity
         private int mArtistIdx;
         private int mAlbumArtIndex;
         private final Resources mResources;
-        private final StringBuilder mStringBuilder = new StringBuilder();
         private final String mUnknownAlbum;
         private final String mUnknownArtist;
-        private final String mAlbumSongSeparator;
-        private final Object[] mFormatArgs = new Object[1];
         private AlphabetIndexer mIndexer;
         private AlbumBrowserActivity mActivity;
         private AsyncQueryHandler mQueryHandler;
@@ -528,7 +520,6 @@ public class AlbumBrowserActivity extends ListActivity
             
             mUnknownAlbum = context.getString(R.string.unknown_album_name);
             mUnknownArtist = context.getString(R.string.unknown_artist_name);
-            mAlbumSongSeparator = context.getString(R.string.albumsongseparator);
 
             Resources r = context.getResources();
             mNowPlayingOverlay = r.getDrawable(R.drawable.indicator_ic_mp_playing_list);
@@ -561,7 +552,7 @@ public class AlbumBrowserActivity extends ListActivity
             mActivity = newactivity;
         }
         
-        public AsyncQueryHandler getQueryHandler() {
+        private AsyncQueryHandler getQueryHandler() {
             return mQueryHandler;
         }
 
@@ -637,8 +628,7 @@ public class AlbumBrowserActivity extends ListActivity
         public Cursor runQueryOnBackgroundThread(CharSequence constraint) {
             String s = constraint.toString();
             if (mConstraintIsValid && (
-                    (s == null && mConstraint == null) ||
-                    (s != null && s.equals(mConstraint)))) {
+                    mConstraint == null || s.equals(mConstraint))) {
                 return getCursor();
             }
             Cursor c = mActivity.getAlbumCursor(null, s);
