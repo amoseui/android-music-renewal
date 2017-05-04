@@ -16,6 +16,7 @@
 
 package com.amoseui.music;
 
+import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.AsyncQueryHandler;
 import android.content.BroadcastReceiver;
@@ -23,6 +24,7 @@ import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
@@ -40,6 +42,7 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -59,8 +62,8 @@ import java.text.Collator;
 import java.util.ArrayList;
 
 public class PlaylistBrowserActivity extends ListActivity
-    implements View.OnCreateContextMenuListener, MusicUtils.Defs
-{
+    implements View.OnCreateContextMenuListener, MusicUtils.Defs {
+
     private static final String TAG = "PlaylistBrowserActivity";
     private static final int DELETE_PLAYLIST = CHILD_MENU_BASE + 1;
     private static final int EDIT_PLAYLIST = CHILD_MENU_BASE + 2;
@@ -337,10 +340,35 @@ public class PlaylistBrowserActivity extends ListActivity
                 break;
             case EDIT_PLAYLIST:
                 if (mi.id == RECENTLY_ADDED_PLAYLIST) {
-                    Intent intent = new Intent();
-                    intent.setClass(this, WeekSelector.class);
-                    startActivityForResult(intent, CHANGE_WEEKS);
-                    return true;
+                    int def = MusicUtils.getIntPref(this, "numweeks", 2);
+                    LayoutInflater inflater = getLayoutInflater();
+                    View view = inflater.inflate(R.layout.weekpicker, null);
+                    final VerticalTextSpinner weeks =
+                            (VerticalTextSpinner) view.findViewById(R.id.weeks);
+                    weeks.setItems(
+                            getResources().getStringArray(R.array.weeklist));
+                    weeks.setWrapAround(false);
+                    weeks.setScrollInterval(200);
+                    weeks.setSelectedPos(def - 1);
+                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder.setView(view)
+                            .setPositiveButton(R.string.weekpicker_set,
+                                    new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            int numWeeks = weeks.getCurrentSelectedPos() + 1;
+                                            MusicUtils.setIntPref(PlaylistBrowserActivity.this, "numweeks", numWeeks);
+                                            dialog.dismiss();
+                                        }
+                            })
+                            .setNegativeButton(R.string.cancel,
+                                    new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialog.dismiss();
+                                        }
+                            })
+                            .show();
                 } else {
                     Log.e(TAG, "should not be here");
                 }

@@ -221,10 +221,8 @@
             android:theme="@android:style/Theme.Dialog" android:exported="false" />
         <activity android:name="com.amoseui.music.RenamePlaylist"
             android:theme="@android:style/Theme.Dialog" android:exported="false" />
-        <activity android:name="com.amoseui.music.WeekSelector"
-            android:theme="@android:style/Theme.Dialog" android:exported="false" />
         <activity android:name="com.amoseui.music.DeleteItems"
-            android:theme="@android:style/Theme.Dialog" android:exported="false" />
+                  android:theme="@android:style/Theme.Dialog" android:exported="false" />
         <activity android:name="com.amoseui.music.ScanningProgress"
             android:theme="@android:style/Theme.Dialog" android:exported="false" />
         <service android:name="com.amoseui.music.MediaPlaybackService"
