@@ -16,9 +16,6 @@
 
 package com.amoseui.music;
 
-import com.amoseui.music.utils.MusicUtils;
-import com.amoseui.music.utils.MusicUtils.ServiceToken;
-
 import android.app.ListActivity;
 import android.content.AsyncQueryHandler;
 import android.content.BroadcastReceiver;
@@ -42,18 +39,21 @@ import android.os.Message;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.view.ContextMenu.ContextMenuInfo;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.AdapterView.AdapterContextMenuInfo;
+
+import com.amoseui.music.utils.MusicUtils;
+import com.amoseui.music.utils.MusicUtils.ServiceToken;
 
 import java.text.Collator;
 import java.util.ArrayList;

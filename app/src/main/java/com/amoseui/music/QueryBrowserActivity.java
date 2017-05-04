@@ -26,7 +26,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.media.AudioManager;
