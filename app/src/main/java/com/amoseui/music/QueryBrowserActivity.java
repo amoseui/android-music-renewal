@@ -47,6 +47,8 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
+import com.amoseui.music.utils.MusicUtils;
+
 public class QueryBrowserActivity extends ListActivity
         implements MusicUtils.Defs, ServiceConnection {
 

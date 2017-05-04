@@ -16,7 +16,8 @@
 
 package com.amoseui.music;
 
-import com.amoseui.music.MusicUtils.ServiceToken;
+import com.amoseui.music.utils.MusicUtils;
+import com.amoseui.music.utils.MusicUtils.ServiceToken;
 
 import android.app.ListActivity;
 import android.content.Context;

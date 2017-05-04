@@ -25,6 +25,8 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.amoseui.music.utils.MusicUtils;
+
 public class DeleteItems extends Activity {
     private long [] mItemList;
 

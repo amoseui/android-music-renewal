@@ -34,6 +34,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.amoseui.music.utils.MusicUtils;
+
 public class RenamePlaylist extends Activity {
     private EditText mPlaylist;
     private Button mSaveButton;

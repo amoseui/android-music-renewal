@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.amoseui.music;
+package com.amoseui.music.utils;
 
 import android.app.Activity;
 import android.content.ComponentName;
@@ -58,6 +58,13 @@ import android.view.Window;
 import android.widget.TabWidget;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.amoseui.music.IMediaPlaybackService;
+import com.amoseui.music.MediaPlaybackActivity;
+import com.amoseui.music.MediaPlaybackService;
+import com.amoseui.music.R;
+import com.amoseui.music.ScanningProgress;
+import com.amoseui.music.SharedPreferencesCompat;
 
 import java.io.File;
 import java.io.FileDescriptor;

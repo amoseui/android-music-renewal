@@ -28,7 +28,8 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
-import com.amoseui.music.MusicUtils.ServiceToken;
+import com.amoseui.music.utils.MusicUtils;
+import com.amoseui.music.utils.MusicUtils.ServiceToken;
 
 public class MusicBrowserActivity extends Activity implements MusicUtils.Defs {
 

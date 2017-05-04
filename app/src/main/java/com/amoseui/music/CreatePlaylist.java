@@ -35,6 +35,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.amoseui.music.utils.MusicUtils;
+
 public class CreatePlaylist extends Activity {
     private EditText mPlaylist;
     private TextView mPrompt;

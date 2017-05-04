@@ -28,6 +28,8 @@ import android.view.View;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 
+import com.amoseui.music.utils.MusicUtils;
+
 public class VideoBrowserActivity extends ListActivity
         implements MusicUtils.Defs {
 

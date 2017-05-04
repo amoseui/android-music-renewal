@@ -55,6 +55,8 @@ import android.widget.SimpleCursorTreeAdapter;
 import android.widget.TextView;
 import android.widget.ExpandableListView.ExpandableListContextMenuInfo;
 
+import com.amoseui.music.utils.MusicUtils;
+
 
 public class ArtistAlbumBrowserActivity extends ExpandableListActivity
         implements View.OnCreateContextMenuListener, MusicUtils.Defs, ServiceConnection

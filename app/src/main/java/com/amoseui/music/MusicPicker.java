@@ -45,6 +45,8 @@ import android.widget.SectionIndexer;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
+import com.amoseui.music.utils.MusicUtils;
+
 import java.io.IOException;
 
 /**
