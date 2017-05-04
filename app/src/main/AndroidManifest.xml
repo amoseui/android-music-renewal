@@ -34,8 +34,9 @@
             android:value="com.amoseui.music.QueryBrowserActivity"
         />
         <activity android:name="com.amoseui.music.MusicBrowserActivity"
-            android:theme="@style/AppTheme"
-            android:exported="true">
+            android:theme="@android:style/Theme.NoTitleBar"
+            android:exported="true"
+        >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.intent.action.MUSIC_PLAYER" />
