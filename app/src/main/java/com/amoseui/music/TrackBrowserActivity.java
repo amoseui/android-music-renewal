@@ -61,7 +61,7 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
 import com.amoseui.music.dialog.CreatePlaylistDialogBuilder;
-import com.amoseui.music.dialog.PlaylistDialogCallback;
+import com.amoseui.music.dialog.PlaylistDialogBuilder;
 import com.amoseui.music.utils.MusicUtils;
 import com.amoseui.music.utils.MusicUtils.ServiceToken;
 
@@ -69,7 +69,8 @@ import java.util.Arrays;
 
 public class TrackBrowserActivity extends ListActivity
         implements View.OnCreateContextMenuListener,
-        MusicUtils.Defs, ServiceConnection, PlaylistDialogCallback {
+        MusicUtils.Defs, ServiceConnection,
+        PlaylistDialogBuilder.OnButtonClickListener {
 
     private static final String TAG = "TrackBrowserActivity";
 

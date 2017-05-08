@@ -57,13 +57,13 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
 import com.amoseui.music.dialog.CreatePlaylistDialogBuilder;
-import com.amoseui.music.dialog.PlaylistDialogCallback;
+import com.amoseui.music.dialog.PlaylistDialogBuilder;
 import com.amoseui.music.utils.MusicUtils;
 import com.amoseui.music.utils.MusicUtils.ServiceToken;
 
 public class AlbumBrowserActivity extends ListActivity
         implements View.OnCreateContextMenuListener, MusicUtils.Defs,
-        ServiceConnection, PlaylistDialogCallback {
+        ServiceConnection, PlaylistDialogBuilder.OnButtonClickListener {
     private String mCurrentAlbumId;
     private String mCurrentAlbumName;
     private String mCurrentArtistNameForAlbum;

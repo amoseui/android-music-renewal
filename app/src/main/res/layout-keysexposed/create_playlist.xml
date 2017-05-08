@@ -38,23 +38,5 @@
         <requestFocus />
     </EditText>
 
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="6dip"
-        android:background="#ffffff" >
-
-        <Button android:id="@+id/create"
-            android:layout_width="120dip" android:layout_height="wrap_content" 
-            android:text="@string/create_playlist_create_text"
-            android:layout_alignParentLeft="true" />
-
-        <Button android:id="@+id/cancel"
-            android:layout_width="120dip" android:layout_height="wrap_content" 
-            android:text="@string/cancel"
-            android:layout_alignParentRight="true" />
-
-    </RelativeLayout>
-
 </LinearLayout>
 

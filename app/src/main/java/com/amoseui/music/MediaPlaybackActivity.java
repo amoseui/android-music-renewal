@@ -62,13 +62,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.amoseui.music.dialog.CreatePlaylistDialogBuilder;
-import com.amoseui.music.dialog.PlaylistDialogCallback;
+import com.amoseui.music.dialog.PlaylistDialogBuilder;
 import com.amoseui.music.utils.MusicUtils;
 import com.amoseui.music.utils.MusicUtils.ServiceToken;
 
 
 public class MediaPlaybackActivity extends Activity implements MusicUtils.Defs,
-        View.OnTouchListener, View.OnLongClickListener, PlaylistDialogCallback {
+        View.OnTouchListener, View.OnLongClickListener,
+        PlaylistDialogBuilder.OnButtonClickListener {
 
     private static final String TAG = "MediaPlaybackActivity";
     private static final int USE_AS_RINGTONE = CHILD_MENU_BASE;
