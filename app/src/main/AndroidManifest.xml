@@ -25,7 +25,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.BROADCAST_STICKY" />
 
-    <application android:icon="@drawable/app_music"
+    <application android:icon="@mipmap/app_music"
         android:label="@string/musicbrowserlabel"
         android:taskAffinity="android.task.music"
         android:allowTaskReparenting="true">
