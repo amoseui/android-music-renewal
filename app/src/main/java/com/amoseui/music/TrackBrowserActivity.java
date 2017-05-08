@@ -60,6 +60,8 @@ import android.widget.SectionIndexer;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
+import com.amoseui.music.dialog.CreatePlaylistDialogBuilder;
+import com.amoseui.music.dialog.PlaylistDialogCallback;
 import com.amoseui.music.utils.MusicUtils;
 import com.amoseui.music.utils.MusicUtils.ServiceToken;
 
@@ -67,7 +69,7 @@ import java.util.Arrays;
 
 public class TrackBrowserActivity extends ListActivity
         implements View.OnCreateContextMenuListener,
-        MusicUtils.Defs, ServiceConnection {
+        MusicUtils.Defs, ServiceConnection, PlaylistDialogCallback {
 
     private static final String TAG = "TrackBrowserActivity";
 
@@ -698,9 +700,9 @@ public class TrackBrowserActivity extends ListActivity
             }
 
             case NEW_PLAYLIST: {
-                Intent intent = new Intent();
-                intent.setClass(this, CreatePlaylist.class);
-                startActivityForResult(intent, NEW_PLAYLIST);
+                CreatePlaylistDialogBuilder builder =
+                        new CreatePlaylistDialogBuilder(this);
+                builder.show();
                 return true;
             }
 
@@ -963,9 +965,9 @@ public class TrackBrowserActivity extends ListActivity
                 return true;
                 
             case SAVE_AS_PLAYLIST:
-                intent = new Intent();
-                intent.setClass(this, CreatePlaylist.class);
-                startActivityForResult(intent, SAVE_AS_PLAYLIST);
+                CreatePlaylistDialogBuilder builder =
+                        new CreatePlaylistDialogBuilder(this);
+                builder.setNewPlaylist(false).show();
                 return true;
                 
             case CLEAR_PLAYLIST:
@@ -984,27 +986,6 @@ public class TrackBrowserActivity extends ListActivity
                     finish();
                 } else {
                     getTrackCursor(mAdapter.getQueryHandler(), null, true);
-                }
-                break;
-                
-            case NEW_PLAYLIST:
-                if (resultCode == RESULT_OK) {
-                    Uri uri = intent.getData();
-                    if (uri != null) {
-                        long [] list = new long[] { mSelectedId };
-                        MusicUtils.addToPlaylist(this, list, Integer.valueOf(uri.getLastPathSegment()));
-                    }
-                }
-                break;
-
-            case SAVE_AS_PLAYLIST:
-                if (resultCode == RESULT_OK) {
-                    Uri uri = intent.getData();
-                    if (uri != null) {
-                        long [] list = MusicUtils.getSongListForCursor(mTrackCursor);
-                        int plid = Integer.parseInt(uri.getLastPathSegment());
-                        MusicUtils.addToPlaylist(this, list, plid);
-                    }
                 }
                 break;
         }
@@ -1105,6 +1086,18 @@ public class TrackBrowserActivity extends ListActivity
             setTitle();
         }
         return ret;
+    }
+
+    @Override
+    public void onPositiveButtonClicked(Uri uri, boolean isNewPlaylist) {
+        if (isNewPlaylist) {
+            long[] list = new long[] { mSelectedId };
+            MusicUtils.addToPlaylist(this, list, Integer.valueOf(uri.getLastPathSegment()));
+        } else {
+            long[] list = MusicUtils.getSongListForCursor(mTrackCursor);
+            int id = Integer.parseInt(uri.getLastPathSegment());
+            MusicUtils.addToPlaylist(this, list, id);
+        }
     }
 
     private class NowPlayingCursor extends AbstractCursor {
