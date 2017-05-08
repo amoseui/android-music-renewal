@@ -55,6 +55,7 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.amoseui.music.dialog.RenamePlaylistDialogBuilder;
 import com.amoseui.music.utils.MusicUtils;
 import com.amoseui.music.utils.MusicUtils.ServiceToken;
 
@@ -79,6 +80,8 @@ public class PlaylistBrowserActivity extends ListActivity
 
     private boolean mCreateShortcut;
     private ServiceToken mToken;
+
+    private Cursor mPlaylistCursor;
 
     public PlaylistBrowserActivity() {
     }
@@ -318,20 +321,22 @@ public class PlaylistBrowserActivity extends ListActivity
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
-        AdapterContextMenuInfo mi = (AdapterContextMenuInfo) item.getMenuInfo();
+        AdapterContextMenuInfo menuInfo =
+                (AdapterContextMenuInfo) item.getMenuInfo();
         switch (item.getItemId()) {
             case PLAY_SELECTION:
-                if (mi.id == RECENTLY_ADDED_PLAYLIST) {
+                if (menuInfo.id == RECENTLY_ADDED_PLAYLIST) {
                     playRecentlyAdded();
-                } else if (mi.id == PODCASTS_PLAYLIST) {
+                } else if (menuInfo.id == PODCASTS_PLAYLIST) {
                     playPodcasts();
                 } else {
-                    MusicUtils.playPlaylist(this, mi.id);
+                    MusicUtils.playPlaylist(this, menuInfo.id);
                 }
                 break;
             case DELETE_PLAYLIST:
                 Uri uri = ContentUris.withAppendedId(
-                        MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, mi.id);
+                        MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,
+                        menuInfo.id);
                 getContentResolver().delete(uri, null, null);
                 Toast.makeText(this, R.string.playlist_deleted_message, Toast.LENGTH_SHORT).show();
                 if (mPlaylistCursor.getCount() == 0) {
@@ -339,10 +344,11 @@ public class PlaylistBrowserActivity extends ListActivity
                 }
                 break;
             case EDIT_PLAYLIST:
-                if (mi.id == RECENTLY_ADDED_PLAYLIST) {
+                if (menuInfo.id == RECENTLY_ADDED_PLAYLIST) {
                     int def = MusicUtils.getIntPref(this, "numweeks", 2);
                     LayoutInflater inflater = getLayoutInflater();
-                    View view = inflater.inflate(R.layout.weekpicker, null);
+                    final View view =
+                            inflater.inflate(R.layout.weekpicker, null);
                     final VerticalTextSpinner weeks =
                             (VerticalTextSpinner) view.findViewById(R.id.weeks);
                     weeks.setItems(
@@ -374,10 +380,9 @@ public class PlaylistBrowserActivity extends ListActivity
                 }
                 break;
             case RENAME_PLAYLIST:
-                Intent intent = new Intent();
-                intent.setClass(this, RenamePlaylist.class);
-                intent.putExtra("rename", mi.id);
-                startActivityForResult(intent, RENAME_PLAYLIST);
+                RenamePlaylistDialogBuilder builder =
+                        new RenamePlaylistDialogBuilder(this, menuInfo.id);
+                builder.show();
                 break;
         }
         return true;
@@ -397,8 +402,7 @@ public class PlaylistBrowserActivity extends ListActivity
     }
 
     @Override
-    protected void onListItemClick(ListView l, View v, int position, long id)
-    {
+    protected void onListItemClick(ListView l, View v, int position, long id) {
         if (mCreateShortcut) {
             final Intent shortcut = new Intent();
             shortcut.setAction(Intent.ACTION_VIEW);
@@ -665,7 +669,5 @@ public class PlaylistBrowserActivity extends ListActivity
             return c;
         }
     }
-    
-    private Cursor mPlaylistCursor;
 }
 

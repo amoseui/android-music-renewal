@@ -219,8 +219,6 @@
         </activity>
         <activity android:name="com.amoseui.music.CreatePlaylist"
             android:theme="@android:style/Theme.Dialog" android:exported="false" />
-        <activity android:name="com.amoseui.music.RenamePlaylist"
-            android:theme="@android:style/Theme.Dialog" android:exported="false" />
         <activity android:name="com.amoseui.music.DeleteItems"
                   android:theme="@android:style/Theme.Dialog" android:exported="false" />
         <activity android:name="com.amoseui.music.ScanningProgress"
