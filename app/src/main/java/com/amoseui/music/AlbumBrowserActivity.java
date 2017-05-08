@@ -56,12 +56,14 @@ import android.widget.SectionIndexer;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
+import com.amoseui.music.dialog.CreatePlaylistDialogBuilder;
+import com.amoseui.music.dialog.PlaylistDialogBuilder;
 import com.amoseui.music.utils.MusicUtils;
 import com.amoseui.music.utils.MusicUtils.ServiceToken;
 
 public class AlbumBrowserActivity extends ListActivity
-    implements View.OnCreateContextMenuListener, MusicUtils.Defs, ServiceConnection
-{
+        implements View.OnCreateContextMenuListener, MusicUtils.Defs,
+        ServiceConnection, PlaylistDialogBuilder.OnButtonClickListener {
     private String mCurrentAlbumId;
     private String mCurrentAlbumName;
     private String mCurrentArtistNameForAlbum;
@@ -303,9 +305,9 @@ public class AlbumBrowserActivity extends ListActivity
             }
 
             case NEW_PLAYLIST: {
-                Intent intent = new Intent();
-                intent.setClass(this, CreatePlaylist.class);
-                startActivityForResult(intent, NEW_PLAYLIST);
+                CreatePlaylistDialogBuilder builder =
+                        new CreatePlaylistDialogBuilder(this);
+                builder.show();
                 return true;
             }
 
@@ -376,16 +378,6 @@ public class AlbumBrowserActivity extends ListActivity
                     finish();
                 } else {
                     getAlbumCursor(mAdapter.getQueryHandler(), null);
-                }
-                break;
-
-            case NEW_PLAYLIST:
-                if (resultCode == RESULT_OK) {
-                    Uri uri = intent.getData();
-                    if (uri != null) {
-                        long [] list = MusicUtils.getSongListForAlbum(this, Long.parseLong(mCurrentAlbumId));
-                        MusicUtils.addToPlaylist(this, list, Long.parseLong(uri.getLastPathSegment()));
-                    }
                 }
                 break;
         }
@@ -476,7 +468,15 @@ public class AlbumBrowserActivity extends ListActivity
         }
         return ret;
     }
-    
+
+    @Override
+    public void onPositiveButtonClicked(Uri uri, boolean isNewPlaylist) {
+        long[] list = MusicUtils.getSongListForAlbum(
+                this, Long.parseLong(mCurrentAlbumId));
+        MusicUtils.addToPlaylist(
+                this, list, Long.parseLong(uri.getLastPathSegment()));
+    }
+
     private static class AlbumListAdapter extends SimpleCursorAdapter implements SectionIndexer {
         
         private final Drawable mNowPlayingOverlay;

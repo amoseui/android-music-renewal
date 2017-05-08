@@ -61,12 +61,15 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.amoseui.music.dialog.CreatePlaylistDialogBuilder;
+import com.amoseui.music.dialog.PlaylistDialogBuilder;
 import com.amoseui.music.utils.MusicUtils;
 import com.amoseui.music.utils.MusicUtils.ServiceToken;
 
 
 public class MediaPlaybackActivity extends Activity implements MusicUtils.Defs,
-        View.OnTouchListener, View.OnLongClickListener {
+        View.OnTouchListener, View.OnLongClickListener,
+        PlaylistDialogBuilder.OnButtonClickListener {
 
     private static final String TAG = "MediaPlaybackActivity";
     private static final int USE_AS_RINGTONE = CHILD_MENU_BASE;
@@ -590,9 +593,9 @@ public class MediaPlaybackActivity extends Activity implements MusicUtils.Defs,
                     break;
                     
                 case NEW_PLAYLIST: {
-                    intent = new Intent();
-                    intent.setClass(this, CreatePlaylist.class);
-                    startActivityForResult(intent, NEW_PLAYLIST);
+                    CreatePlaylistDialogBuilder builder =
+                            new CreatePlaylistDialogBuilder(this);
+                    builder.show();
                     return true;
                 }
 
@@ -637,24 +640,7 @@ public class MediaPlaybackActivity extends Activity implements MusicUtils.Defs,
         }
         return super.onOptionsItemSelected(item);
     }
-    
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        if (resultCode != RESULT_OK) {
-            return;
-        }
-        switch (requestCode) {
-            case NEW_PLAYLIST:
-                Uri uri = intent.getData();
-                if (uri != null) {
-                    long [] list = new long[1];
-                    list[0] = MusicUtils.getCurrentAudioId();
-                    int playlist = Integer.parseInt(uri.getLastPathSegment());
-                    MusicUtils.addToPlaylist(this, list, playlist);
-                }
-                break;
-        }
-    }
+
     private final int keyboard[][] = {
         {
             KeyEvent.KEYCODE_Q,
@@ -1265,6 +1251,14 @@ public class MediaPlaybackActivity extends Activity implements MusicUtils.Defs,
             }
         }
     };
+
+    @Override
+    public void onPositiveButtonClicked(Uri uri, boolean isNewPlaylist) {
+        long [] list = new long[1];
+        list[0] = MusicUtils.getCurrentAudioId();
+        int playlist = Integer.parseInt(uri.getLastPathSegment());
+        MusicUtils.addToPlaylist(this, list, playlist);
+    }
 
     private static class AlbumSongIdWrapper {
         private long albumid;
