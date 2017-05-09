@@ -16,6 +16,7 @@
 
 package com.amoseui.music;
 
+import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.app.SearchManager;
 import android.content.AsyncQueryHandler;
@@ -25,6 +26,7 @@ import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
@@ -720,9 +722,8 @@ public class TrackBrowserActivity extends ListActivity
                 return true;
 
             case DELETE_ITEM: {
-                long [] list = new long[1];
+                final long[] list = new long[1];
                 list[0] = (int) mSelectedId;
-                Bundle b = new Bundle();
                 String f;
                 if (android.os.Environment.isExternalStorageRemovable()) {
                     f = getString(R.string.delete_song_desc); 
@@ -730,12 +731,24 @@ public class TrackBrowserActivity extends ListActivity
                     f = getString(R.string.delete_song_desc_nosdcard); 
                 }
                 String desc = String.format(f, mCurrentTrackName);
-                b.putString("description", desc);
-                b.putLongArray("items", list);
-                Intent intent = new Intent();
-                intent.setClass(this, DeleteItems.class);
-                intent.putExtras(b);
-                startActivityForResult(intent, -1);
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setMessage(desc)
+                        .setPositiveButton(R.string.delete_confirm_button_text,
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        MusicUtils.deleteTracks(TrackBrowserActivity.this, list);
+                                    }
+                                })
+                        .setNegativeButton(R.string.cancel,
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        // Do nothing
+                                    }
+                                })
+                        .show();
                 return true;
             }
             

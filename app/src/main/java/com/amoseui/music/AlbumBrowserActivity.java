@@ -16,6 +16,7 @@
 
 package com.amoseui.music;
 
+import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.app.SearchManager;
 import android.content.AsyncQueryHandler;
@@ -23,6 +24,7 @@ import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
@@ -318,7 +320,8 @@ public class AlbumBrowserActivity extends ListActivity
                 return true;
             }
             case DELETE_ITEM: {
-                long [] list = MusicUtils.getSongListForAlbum(this, Long.parseLong(mCurrentAlbumId));
+                final long[] list = MusicUtils.getSongListForAlbum(
+                        this, Long.parseLong(mCurrentAlbumId));
                 String f;
                 if (android.os.Environment.isExternalStorageRemovable()) {
                     f = getString(R.string.delete_album_desc);
@@ -326,13 +329,24 @@ public class AlbumBrowserActivity extends ListActivity
                     f = getString(R.string.delete_album_desc_nosdcard);
                 }
                 String desc = String.format(f, mCurrentAlbumName);
-                Bundle b = new Bundle();
-                b.putString("description", desc);
-                b.putLongArray("items", list);
-                Intent intent = new Intent();
-                intent.setClass(this, DeleteItems.class);
-                intent.putExtras(b);
-                startActivityForResult(intent, -1);
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setMessage(desc)
+                        .setPositiveButton(R.string.delete_confirm_button_text,
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        MusicUtils.deleteTracks(AlbumBrowserActivity.this, list);
+                                    }
+                                })
+                        .setNegativeButton(R.string.cancel,
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        // Do nothing
+                                    }
+                                })
+                        .show();
                 return true;
             }
             case SEARCH:
