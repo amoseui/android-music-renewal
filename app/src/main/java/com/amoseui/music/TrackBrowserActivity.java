@@ -437,7 +437,8 @@ public class TrackBrowserActivity extends ListActivity
                 Log.e(TAG, "setAlbumArtBackground");
             }
         }
-        mTrackList.setBackgroundColor(0xff000000);
+        // TODO(eui-sang.lim): Check this out
+        // mTrackList.setBackgroundColor(0xff000000);
         mTrackList.setCacheColorHint(0);
     }
 
