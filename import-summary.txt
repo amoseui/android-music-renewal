@@ -1,0 +1,145 @@
+ECLIPSE ANDROID PROJECT IMPORT SUMMARY
+======================================
+
+Ignored Files:
+--------------
+The following files were *not* copied into the new Gradle project; you
+should evaluate whether these are still needed in your project and if
+so manually move them:
+
+* .DS_Store
+* .circle.yml.swp
+* .clang-format
+* .idea/
+* .idea/android-music-renewal.iml
+* .idea/caches/
+* .idea/caches/build_file_checksums.ser
+* .idea/codeStyleSettings.xml
+* .idea/codeStyles/
+* .idea/codeStyles/Project.xml
+* .idea/codeStyles/codeStyleConfig.xml
+* .idea/compiler.xml
+* .idea/copyright/
+* .idea/copyright/profiles_settings.xml
+* .idea/encodings.xml
+* .idea/gradle.xml
+* .idea/libraries/
+* .idea/libraries/Gradle__com_android_databinding_adapters_1_3_1.xml
+* .idea/libraries/Gradle__com_android_databinding_baseLibrary_2_3_1_jar.xml
+* .idea/libraries/Gradle__com_android_databinding_library_1_3_1.xml
+* .idea/libraries/Gradle__com_android_support_animated_vector_drawable_25_3_1.xml
+* .idea/libraries/Gradle__com_android_support_appcompat_v7_25_3_1.xml
+* .idea/libraries/Gradle__com_android_support_cardview_v7_25_3_1.xml
+* .idea/libraries/Gradle__com_android_support_design_25_3_1.xml
+* .idea/libraries/Gradle__com_android_support_gridlayout_v7_25_3_1.xml
+* .idea/libraries/Gradle__com_android_support_mediarouter_v7_25_3_1.xml
+* .idea/libraries/Gradle__com_android_support_multidex_1_0_1.xml
+* .idea/libraries/Gradle__com_android_support_palette_v7_25_3_1.xml
+* .idea/libraries/Gradle__com_android_support_percent_25_3_1.xml
+* .idea/libraries/Gradle__com_android_support_preference_v14_25_3_1.xml
+* .idea/libraries/Gradle__com_android_support_preference_v7_25_3_1.xml
+* .idea/libraries/Gradle__com_android_support_recyclerview_v7_25_3_1.xml
+* .idea/libraries/Gradle__com_android_support_support_annotations_25_3_1_jar.xml
+* .idea/libraries/Gradle__com_android_support_support_compat_25_3_1.xml
+* .idea/libraries/Gradle__com_android_support_support_core_ui_25_3_1.xml
+* .idea/libraries/Gradle__com_android_support_support_core_utils_25_3_1.xml
+* .idea/libraries/Gradle__com_android_support_support_fragment_25_3_1.xml
+* .idea/libraries/Gradle__com_android_support_support_media_compat_25_3_1.xml
+* .idea/libraries/Gradle__com_android_support_support_v13_25_3_1.xml
+* .idea/libraries/Gradle__com_android_support_support_v4_25_3_1.xml
+* .idea/libraries/Gradle__com_android_support_support_vector_drawable_25_3_1.xml
+* .idea/libraries/Gradle__com_android_support_test_espresso_espresso_core_2_2_2.xml
+* .idea/libraries/Gradle__com_android_support_test_espresso_espresso_idling_resource_2_2_2.xml
+* .idea/libraries/Gradle__com_android_support_test_exposed_instrumentation_api_publish_0_5.xml
+* .idea/libraries/Gradle__com_android_support_test_rules_0_5.xml
+* .idea/libraries/Gradle__com_android_support_test_runner_0_5.xml
+* .idea/libraries/Gradle__com_android_support_test_uiautomator_uiautomator_v18_2_1_2.xml
+* .idea/libraries/Gradle__com_android_support_transition_25_3_1.xml
+* .idea/libraries/Gradle__com_google_code_findbugs_jsr305_2_0_1_jar.xml
+* .idea/libraries/Gradle__com_squareup_javawriter_2_1_1_jar.xml
+* .idea/libraries/Gradle__javax_annotation_javax_annotation_api_1_2_jar.xml
+* .idea/libraries/Gradle__javax_inject_javax_inject_1_jar.xml
+* .idea/libraries/Gradle__junit_junit_4_12_jar.xml
+* .idea/libraries/Gradle__org_hamcrest_hamcrest_core_1_3_jar.xml
+* .idea/libraries/Gradle__org_hamcrest_hamcrest_integration_1_3_jar.xml
+* .idea/libraries/Gradle__org_hamcrest_hamcrest_library_1_3_jar.xml
+* .idea/libraries/Gradle__org_mockito_mockito_core_1_10_19_jar.xml
+* .idea/libraries/Gradle__org_objenesis_objenesis_2_1_jar.xml
+* .idea/libraries/com_android_databinding_adapters_1_3_1.xml
+* .idea/libraries/com_android_databinding_baseLibrary_2_3_1_jar.xml
+* .idea/libraries/com_android_databinding_library_1_3_1.xml
+* .idea/libraries/com_android_support_animated_vector_drawable_25_3_1.xml
+* .idea/libraries/com_android_support_appcompat_v7_25_3_1.xml
+* .idea/libraries/com_android_support_cardview_v7_25_3_1.xml
+* .idea/libraries/com_android_support_design_25_3_1.xml
+* .idea/libraries/com_android_support_gridlayout_v7_25_3_1.xml
+* .idea/libraries/com_android_support_mediarouter_v7_25_3_1.xml
+* .idea/libraries/com_android_support_multidex_1_0_1.xml
+* .idea/libraries/com_android_support_palette_v7_25_3_1.xml
+* .idea/libraries/com_android_support_percent_25_3_1.xml
+* .idea/libraries/com_android_support_preference_v14_25_3_1.xml
+* .idea/libraries/com_android_support_preference_v7_25_3_1.xml
+* .idea/libraries/com_android_support_recyclerview_v7_25_3_1.xml
+* .idea/libraries/com_android_support_support_annotations_25_3_1_jar.xml
+* .idea/libraries/com_android_support_support_compat_25_3_1.xml
+* .idea/libraries/com_android_support_support_core_ui_25_3_1.xml
+* .idea/libraries/com_android_support_support_core_utils_25_3_1.xml
+* .idea/libraries/com_android_support_support_fragment_25_3_1.xml
+* .idea/libraries/com_android_support_support_media_compat_25_3_1.xml
+* .idea/libraries/com_android_support_support_v13_25_3_1.xml
+* .idea/libraries/com_android_support_support_v4_25_3_1.xml
+* .idea/libraries/com_android_support_support_vector_drawable_25_3_1.xml
+* .idea/libraries/com_android_support_test_espresso_espresso_core_2_2_2.xml
+* .idea/libraries/com_android_support_test_espresso_espresso_idling_resource_2_2_2.xml
+* .idea/libraries/com_android_support_test_exposed_instrumentation_api_publish_0_5.xml
+* .idea/libraries/com_android_support_test_rules_0_5.xml
+* .idea/libraries/com_android_support_test_runner_0_5.xml
+* .idea/libraries/com_android_support_test_uiautomator_uiautomator_v18_2_1_2.xml
+* .idea/libraries/com_android_support_transition_25_3_1.xml
+* .idea/libraries/com_google_code_findbugs_jsr305_2_0_1_jar.xml
+* .idea/libraries/com_squareup_javawriter_2_1_1_jar.xml
+* .idea/libraries/javax_annotation_javax_annotation_api_1_2_jar.xml
+* .idea/libraries/javax_inject_javax_inject_1_jar.xml
+* .idea/libraries/junit_junit_4_12_jar.xml
+* .idea/libraries/org_hamcrest_hamcrest_core_1_3_jar.xml
+* .idea/libraries/org_hamcrest_hamcrest_integration_1_3_jar.xml
+* .idea/libraries/org_hamcrest_hamcrest_library_1_3_jar.xml
+* .idea/libraries/org_mockito_mockito_core_1_10_19_jar.xml
+* .idea/libraries/org_objenesis_objenesis_2_1_jar.xml
+* .idea/misc.xml
+* .idea/modules.xml
+* .idea/runConfigurations.xml
+* .idea/vcs.xml
+* .idea/workspace (amoseui’s MacBook Pro's conflicted copy 2017-01-26).xml
+* .idea/workspace.xml
+* Android.mk
+* CleanSpec.mk
+* MODULE_LICENSE_APACHE2
+* NOTICE
+* PREUPLOAD.cfg
+* README.md
+* proguard.flags
+
+Moved Files:
+------------
+Android Gradle projects use a different directory structure than ADT
+Eclipse projects. Here's how the projects were restructured:
+
+* AndroidManifest.xml => app/src/main/AndroidManifest.xml
+* res/ => app/src/main/res/
+* src/ => app/src/main/java/
+
+Next Steps:
+-----------
+You can now build the project. The Gradle project needs network
+connectivity to download dependencies.
+
+Bugs:
+-----
+If for some reason your project does not build, and you determine that
+it is due to a bug or limitation of the Eclipse to Gradle importer,
+please file a bug at http://b.android.com with category
+Component-Tools.
+
+(This import summary is for your information only, and can be deleted
+after import once you are satisfied with the results.)
