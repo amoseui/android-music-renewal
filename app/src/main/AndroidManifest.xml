@@ -15,12 +15,10 @@
     limitations under the License.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.android.music"
-          android:versionCode="2"
-          android:versionName="2.0">
+          package="com.amoseui.music">
 
     <!-- Package Name -->
-    <original-package android:name="com.android.music"/>
+    <original-package android:name="com.amoseui.music"/>
 
     <!-- Permissions -->
     <uses-permission android:name="android.permission.WRITE_SETTINGS"/>
@@ -45,7 +43,7 @@
                    android:resource="@xml/automotive_app_desc"/>
 
         <!-- Main Activity -->
-        <activity android:name="com.android.music.MusicBrowserActivity"
+        <activity android:name="com.amoseui.music.MusicBrowserActivity"
                   android:theme="@android:style/Theme.NoTitleBar"
                   android:exported="true">
             <intent-filter>
@@ -56,7 +54,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="AudioPreview" android:theme="@android:style/Theme.Dialog"
+        <activity android:name="com.amoseui.music.AudioPreview" android:theme="@android:style/Theme.Dialog"
                   android:taskAffinity=""
                   android:excludeFromRecents="true" android:exported="true" >
             <intent-filter>
@@ -91,7 +89,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="com.android.music.MusicPicker"
+        <activity android:name="com.amoseui.music.MusicPicker"
                   android:label="@string/music_picker_title" android:exported="true" >
             <!-- First way to invoke us: someone asks to get content of
                  any of the audio types we support. -->
@@ -126,7 +124,7 @@
             recents since this is accessible through a notification when
             appropriate.
         -->
-        <activity android:name="com.android.music.MediaPlaybackActivity"
+        <activity android:name="com.amoseui.music.MediaPlaybackActivity"
                   android:theme="@android:style/Theme.NoTitleBar"
                   android:label="@string/mediaplaybacklabel"
                   android:taskAffinity=""
@@ -145,12 +143,12 @@
                 <data android:mimeType="application/itunes"/>
             </intent-filter>
             <intent-filter>
-                <action android:name="com.android.music.PLAYBACK_VIEWER"/>
+                <action android:name="com.amoseui.music.PLAYBACK_VIEWER"/>
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>
 
-        <activity android:name="com.android.music.ArtistAlbumBrowserActivity"
+        <activity android:name="com.amoseui.music.ArtistAlbumBrowserActivity"
                   android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.PICK"/>
@@ -159,7 +157,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="com.android.music.AlbumBrowserActivity" android:exported="false">
+        <activity android:name="com.amoseui.music.AlbumBrowserActivity" android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.PICK"/>
                 <category android:name="android.intent.category.DEFAULT"/>
@@ -167,15 +165,15 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="com.android.music.TrackBrowserActivity" android:exported="false">
+        <activity android:name="com.amoseui.music.TrackBrowserActivity" android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.PICK"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <data android:mimeType="vnd.android.cursor.dir/track"/>
             </intent-filter>
         </activity>
-
-        <activity android:name="com.android.music.PlaylistBrowserActivity"
+mus
+        <activity android:name="com.amoseui.music.PlaylistBrowserActivity"
                   android:label="@string/musicbrowserlabel"
                   android:exported="true">
             <intent-filter>
@@ -190,7 +188,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name="com.android.music.MediaPlaybackService"
+        <service android:name="com.amoseui.music.MediaPlaybackService"
                  android:exported="true"
                  android:label="Android Open Source Music Player">
             <intent-filter>
