@@ -386,7 +386,13 @@ public class MusicProvider {
             mContext.getContentResolver().delete(contentUri, null, null);
             return null;
         }
-        retriever.setDataSource(mContext, contentUri);
+        try {
+            retriever.setDataSource(mContext, contentUri);
+        } catch(RuntimeException e) {
+            // TODO(amoseui): fix the error
+            LogHelper.e(TAG, "setDataSource error: ", musicPath);
+            return null;
+        }
         String title = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
         String album = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
         String artist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
