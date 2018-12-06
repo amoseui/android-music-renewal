@@ -86,7 +86,7 @@ public class ArtistAlbumBrowserActivity extends ExpandableListActivity {
         mAdapter = (ArtistAlbumListAdapter) getLastNonConfigurationInstance();
         if (mAdapter == null) {
             // Log.i("@@@", "starting query");
-            mAdapter = new ArtistAlbumListAdapter(this, new ArrayList<>(), new ArrayList<>());
+            mAdapter = new ArtistAlbumListAdapter(this, new ArrayList<ConcurrentHashMap<String, MediaBrowser.MediaItem>>(), new ArrayList<ArrayList<ConcurrentHashMap<String, MediaBrowser.MediaItem>>>());
             setListAdapter(mAdapter);
             setTitle(R.string.working_artists);
         } else {
@@ -147,7 +147,7 @@ public class ArtistAlbumBrowserActivity extends ExpandableListActivity {
                         mAdapter.getArtistMap().put(item.getDescription().getTitle().toString(),
                                 mAdapter.getGroupData().size());
                         mAdapter.getGroupData().add(entry);
-                        mAdapter.getChildData().add(new ArrayList<>());
+                        mAdapter.getChildData().add(new ArrayList<ConcurrentHashMap<String, MediaBrowser.MediaItem>>());
                     }
                     mMediaBrowser.subscribe(item.getMediaId(), this);
                 }

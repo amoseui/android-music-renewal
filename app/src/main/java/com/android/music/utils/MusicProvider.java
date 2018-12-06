@@ -86,7 +86,7 @@ public class MusicProvider {
         mMusicListById = new ConcurrentHashMap<>();
         mMusicList = new ArrayList<>();
         mMusicListByMediaId = new ConcurrentHashMap<>();
-        mMusicListByPlaylist.put(MediaIDHelper.MEDIA_ID_NOW_PLAYING, new ArrayList<>());
+        mMusicListByPlaylist.put(MediaIDHelper.MEDIA_ID_NOW_PLAYING, new ArrayList<MediaMetadata>());
     }
 
     public boolean isInitialized() {
@@ -431,7 +431,7 @@ public class MusicProvider {
             thisAlbum = UNKOWN;
         }
         if (!mMusicListByAlbum.containsKey(thisAlbum)) {
-            mMusicListByAlbum.put(thisAlbum, new ArrayList<>());
+            mMusicListByAlbum.put(thisAlbum, new ArrayList<MediaMetadata>());
         }
         mMusicListByAlbum.get(thisAlbum).add(metadata);
     }
@@ -446,7 +446,7 @@ public class MusicProvider {
             thisAlbum = UNKOWN;
         }
         if (!mArtistAlbumDb.containsKey(thisArtist)) {
-            mArtistAlbumDb.put(thisArtist, new ConcurrentHashMap<>());
+            mArtistAlbumDb.put(thisArtist, new ConcurrentHashMap<String, MediaMetadata>());
         }
         Map<String, MediaMetadata> albumsMap = mArtistAlbumDb.get(thisArtist);
         MediaMetadata.Builder builder;

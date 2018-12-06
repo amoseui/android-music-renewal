@@ -180,7 +180,7 @@ public class MediaPlaybackService extends MediaBrowserService implements Playbac
                     if (success) {
                         onLoadChildren(parentMediaId, result);
                     } else {
-                        result.sendResult(Collections.emptyList());
+                        result.sendResult(Collections.<MediaItem>emptyList());
                     }
                 }
             });

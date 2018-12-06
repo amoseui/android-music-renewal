@@ -223,7 +223,7 @@ public class AlbumBrowserActivity extends ListActivity {
         }
 
         AlbumBrowseAdapter(Context context, int layout) {
-            super(context, layout, new ArrayList<>());
+            super(context, layout);
             mNowPlayingOverlay = context.getResources().getDrawable(
                     R.drawable.indicator_ic_mp_playing_list, context.getTheme());
             Bitmap b = BitmapFactory.decodeResource(

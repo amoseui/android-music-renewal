@@ -8,6 +8,9 @@ android {
         applicationId "com.android.music"
         minSdkVersion 1
         targetSdkVersion 28
+        versionCode 1
+        versionName "0.0.1"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -19,6 +22,10 @@ android {
             minifyEnabled false
         }
     }
+
+    useLibrary 'android.test.base'
+    useLibrary 'android.test.mock'
+    useLibrary 'android.test.runner'
 
     lintOptions {
         abortOnError false

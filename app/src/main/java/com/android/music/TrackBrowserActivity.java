@@ -249,7 +249,7 @@ public class TrackBrowserActivity extends ListActivity {
         }
 
         TrackBrowseAdapter(Activity activity, int layout) {
-            super(activity, layout, new ArrayList<>());
+            super(activity, layout);
             mLayoutId = layout;
             mNowPlayingOverlay = activity.getResources().getDrawable(
                     R.drawable.indicator_ic_mp_playing_list, activity.getTheme());

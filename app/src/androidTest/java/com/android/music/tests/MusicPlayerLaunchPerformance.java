@@ -17,7 +17,6 @@
 package com.android.music.tests;
 
 import android.app.Activity;
-import android.test.LaunchPerformanceBase;
 import android.os.Bundle;
 
 import java.util.Map;
