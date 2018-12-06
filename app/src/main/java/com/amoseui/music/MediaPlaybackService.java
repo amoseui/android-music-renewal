@@ -40,22 +40,17 @@ import com.amoseui.music.utils.MediaNotificationManager;
 import com.amoseui.music.utils.MusicProvider;
 import com.amoseui.music.utils.Playback;
 import com.amoseui.music.utils.QueueHelper;
-import com.amoseui.music.R;
-import com.amoseui.music.utils.*;
 
 import java.lang.ref.WeakReference;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Provides "background" audio playback capabilities, allowing the
  * user to switch between activities without stopping playback.
  */
 public class MediaPlaybackService extends MediaBrowserService implements Playback.Callback {
-    private static final String TAG = LogHelper.makeLogTag(MediaPlaybackService.class);
-
-    // Delay stopSelf by using a handler.
-    private static final int STOP_DELAY = 30000;
-
     public static final String ACTION_CMD = "com.amoseui.music.ACTION_CMD";
     public static final String CMD_NAME = "CMD_NAME";
     public static final String CMD_PAUSE = "CMD_PAUSE";
@@ -63,16 +58,14 @@ public class MediaPlaybackService extends MediaBrowserService implements Playbac
     public static final String REPEAT_MODE = "REPEAT_MODE";
     public static final String CMD_SHUFFLE = "CMD_SHUFFLE";
     public static final String SHUFFLE_MODE = "SHUFFLE_MODE";
-
-    public enum RepeatMode { REPEAT_NONE, REPEAT_ALL, REPEAT_CURRENT }
-    public enum ShuffleMode { SHUFFLE_NONE, SHUFFLE_RANDOM }
-
+    private static final String TAG = LogHelper.makeLogTag(MediaPlaybackService.class);
+    // Delay stopSelf by using a handler.
+    private static final int STOP_DELAY = 30000;
     // Music catalog manager
     private MusicProvider mMusicProvider;
     private MediaSession mSession;
     // "Now playing" queue:
     private List<MediaSession.QueueItem> mPlayingQueue = null;
-    private Sequence mQueueSeqence = createSequence(0);
     private MediaNotificationManager mMediaNotificationManager;
     // Indicates whether the service was started.
     private boolean mServiceStarted;
@@ -82,10 +75,11 @@ public class MediaPlaybackService extends MediaBrowserService implements Playbac
     private RepeatMode mRepeatMode = RepeatMode.REPEAT_NONE;
     // Default mode is shuffle none
     private ShuffleMode mShuffleMode = ShuffleMode.SHUFFLE_NONE;
+    private Sequence mQueueSeqence = createSequence(0);
     // Extra information for this session
     private Bundle mExtras;
-
-    public MediaPlaybackService() {}
+    public MediaPlaybackService() {
+    }
 
     @Override
     public void onCreate() {
@@ -200,24 +194,24 @@ public class MediaPlaybackService extends MediaBrowserService implements Playbac
                 case MediaIDHelper.MEDIA_ID_ROOT:
                     Log.d(TAG, "OnLoadChildren.ROOT");
                     mediaItems.add(new MediaItem(new MediaDescription.Builder()
-                                                         .setMediaId(MediaIDHelper.MEDIA_ID_MUSICS_BY_ARTIST)
-                                                         .setTitle("Artists")
-                                                         .build(),
+                            .setMediaId(MediaIDHelper.MEDIA_ID_MUSICS_BY_ARTIST)
+                            .setTitle("Artists")
+                            .build(),
                             MediaItem.FLAG_BROWSABLE));
                     mediaItems.add(new MediaItem(new MediaDescription.Builder()
-                                                         .setMediaId(MediaIDHelper.MEDIA_ID_MUSICS_BY_ALBUM)
-                                                         .setTitle("Albums")
-                                                         .build(),
+                            .setMediaId(MediaIDHelper.MEDIA_ID_MUSICS_BY_ALBUM)
+                            .setTitle("Albums")
+                            .build(),
                             MediaItem.FLAG_BROWSABLE));
                     mediaItems.add(new MediaItem(new MediaDescription.Builder()
-                                                         .setMediaId(MediaIDHelper.MEDIA_ID_MUSICS_BY_SONG)
-                                                         .setTitle("Songs")
-                                                         .build(),
+                            .setMediaId(MediaIDHelper.MEDIA_ID_MUSICS_BY_SONG)
+                            .setTitle("Songs")
+                            .build(),
                             MediaItem.FLAG_BROWSABLE));
                     mediaItems.add(new MediaItem(new MediaDescription.Builder()
-                                                         .setMediaId(MediaIDHelper.MEDIA_ID_MUSICS_BY_PLAYLIST)
-                                                         .setTitle("Playlists")
-                                                         .build(),
+                            .setMediaId(MediaIDHelper.MEDIA_ID_MUSICS_BY_PLAYLIST)
+                            .setTitle("Playlists")
+                            .build(),
                             MediaItem.FLAG_BROWSABLE));
                     break;
                 case MediaIDHelper.MEDIA_ID_MUSICS_BY_ARTIST:
@@ -306,11 +300,11 @@ public class MediaPlaybackService extends MediaBrowserService implements Playbac
             String title = metadata.getString(MediaMetadata.METADATA_KEY_TITLE);
             String artistName = metadata.getString(MediaMetadata.METADATA_KEY_ARTIST);
             MediaItem item = new MediaItem(new MediaDescription.Builder()
-                                                   .setMediaId(hierarchyAwareMediaID)
-                                                   .setTitle(title)
-                                                   .setSubtitle(artistName)
-                                                   .setExtras(songExtra)
-                                                   .build(),
+                    .setMediaId(hierarchyAwareMediaID)
+                    .setTitle(title)
+                    .setSubtitle(artistName)
+                    .setExtras(songExtra)
+                    .build(),
                     MediaItem.FLAG_PLAYABLE);
             mediaItems.add(item);
         }
@@ -335,6 +329,382 @@ public class MediaPlaybackService extends MediaBrowserService implements Playbac
                             .build(),
                     MediaItem.FLAG_BROWSABLE);
             mediaItems.add(item);
+        }
+    }
+
+    /**
+     * Handle a request to play music
+     */
+    private void handlePlayRequest() {
+        LogHelper.d(TAG, "handlePlayRequest: mState=" + mPlayback.getState());
+
+        mDelayedStopHandler.removeCallbacksAndMessages(null);
+        if (!mServiceStarted) {
+            LogHelper.v(TAG, "Starting service");
+            // The MusicService needs to keep running even after the calling MediaBrowser
+            // is disconnected. Call startService(Intent) and then stopSelf(..) when we no longer
+            // need to play media.
+            startService(new Intent(getApplicationContext(), MediaPlaybackService.class));
+            mServiceStarted = true;
+        }
+
+        if (!mSession.isActive()) {
+            mSession.setActive(true);
+        }
+
+        if (QueueHelper.isIndexPlayable(mQueueSeqence.getCurrent(), mPlayingQueue)) {
+            updateMetadata();
+            mPlayback.play(mPlayingQueue.get(mQueueSeqence.getCurrent()));
+        }
+    }
+
+    /**
+     * Handle a request to pause music
+     */
+    private void handlePauseRequest() {
+        LogHelper.d(TAG, "handlePauseRequest: mState=" + mPlayback.getState());
+        mPlayback.pause();
+        // reset the delayed stop handler.
+        mDelayedStopHandler.removeCallbacksAndMessages(null);
+        mDelayedStopHandler.sendEmptyMessageDelayed(0, STOP_DELAY);
+    }
+
+    /**
+     * Handle a request to stop music
+     */
+    private void handleStopRequest(String withError) {
+        LogHelper.d(
+                TAG, "handleStopRequest: mState=" + mPlayback.getState() + " error=", withError);
+        mPlayback.stop(true);
+        // reset the delayed stop handler.
+        mDelayedStopHandler.removeCallbacksAndMessages(null);
+        mDelayedStopHandler.sendEmptyMessageDelayed(0, STOP_DELAY);
+
+        updatePlaybackState(withError);
+
+        // service is no longer necessary. Will be started again if needed.
+        stopSelf();
+        mServiceStarted = false;
+    }
+
+    private void updateMetadata() {
+        if (!QueueHelper.isIndexPlayable(mQueueSeqence.getCurrent(), mPlayingQueue)) {
+            LogHelper.e(TAG, "Can't retrieve current metadata.");
+            updatePlaybackState(getResources().getString(R.string.error_no_metadata));
+            return;
+        }
+        MediaSession.QueueItem queueItem = mPlayingQueue.get(mQueueSeqence.getCurrent());
+        String musicId =
+                MediaIDHelper.extractMusicIDFromMediaID(queueItem.getDescription().getMediaId());
+        MediaMetadata track = mMusicProvider.getMusicByMediaId(musicId).getMetadata();
+        final String trackId = track.getString(MediaMetadata.METADATA_KEY_MEDIA_ID);
+        if (!musicId.equals(trackId)) {
+            IllegalStateException e = new IllegalStateException("track ID should match musicId.");
+            LogHelper.e(TAG, "track ID should match musicId.", " musicId=", musicId,
+                    " trackId=", trackId,
+                    " mediaId from queueItem=", queueItem.getDescription().getMediaId(),
+                    " title from queueItem=", queueItem.getDescription().getTitle(),
+                    " mediaId from track=", track.getDescription().getMediaId(),
+                    " title from track=", track.getDescription().getTitle(),
+                    " source.hashcode from track=",
+                    track.getString(MusicProvider.CUSTOM_METADATA_TRACK_SOURCE).hashCode(), e);
+            throw e;
+        }
+        LogHelper.d(TAG, "Updating metadata for MusicID= " + musicId);
+        mSession.setMetadata(track);
+
+        // Set the proper album artwork on the media session, so it can be shown in the
+        // locked screen and in other places.
+        if (track.getDescription().getIconBitmap() == null
+                && track.getDescription().getIconUri() != null) {
+            String albumUri = track.getDescription().getIconUri().toString();
+            AlbumArtCache.getInstance().fetch(albumUri, new AlbumArtCache.FetchListener() {
+                @Override
+                public void onFetched(String artUrl, Bitmap bitmap, Bitmap icon) {
+                    MediaSession.QueueItem queueItem =
+                            mPlayingQueue.get(mQueueSeqence.getCurrent());
+                    MediaMetadata track = mMusicProvider.getMusicByMediaId(trackId).getMetadata();
+                    track = new MediaMetadata
+                            .Builder(track)
+
+                            // set high resolution bitmap in METADATA_KEY_ALBUM_ART. This is
+                            // used, for
+                            // example, on the lockscreen background when the media session
+                            // is active.
+                            .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, bitmap)
+
+                            // set small version of the album art in the DISPLAY_ICON. This
+                            // is used on
+                            // the MediaDescription and thus it should be small to be
+                            // serialized if
+                            // necessary..
+                            .putBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON, icon)
+
+                            .build();
+
+                    mMusicProvider.updateMusic(trackId, track);
+
+                    // If we are still playing the same music
+                    String currentPlayingId = MediaIDHelper.extractMusicIDFromMediaID(
+                            queueItem.getDescription().getMediaId());
+                    if (trackId.equals(currentPlayingId)) {
+                        mSession.setMetadata(track);
+                    }
+                }
+            });
+        }
+    }
+
+    /**
+     * Update the current media player state, optionally showing an error message.
+     *
+     * @param error if not null, error message to present to the user.
+     */
+    private void updatePlaybackState(String error) {
+        LogHelper.d(TAG, "updatePlaybackState, playback state=" + mPlayback.getState());
+        long position = PlaybackState.PLAYBACK_POSITION_UNKNOWN;
+        if (mPlayback != null && mPlayback.isConnected()) {
+            position = mPlayback.getCurrentStreamPosition();
+        }
+
+        PlaybackState.Builder stateBuilder =
+                new PlaybackState.Builder().setActions(getAvailableActions());
+
+        int state = mPlayback.getState();
+
+        // If there is an error message, send it to the playback state:
+        if (error != null) {
+            // Error states are really only supposed to be used for errors that cause playback to
+            // stop unexpectedly and persist until the user takes action to fix it.
+            stateBuilder.setErrorMessage(error);
+            state = PlaybackState.STATE_ERROR;
+        }
+        stateBuilder.setState(state, position, 1.0f, SystemClock.elapsedRealtime());
+
+        // Set the activeQueueItemId if the current index is valid.
+        if (QueueHelper.isIndexPlayable(mQueueSeqence.getCurrent(), mPlayingQueue)) {
+            MediaSession.QueueItem item = mPlayingQueue.get(mQueueSeqence.getCurrent());
+            stateBuilder.setActiveQueueItemId(item.getQueueId());
+        }
+
+        mSession.setPlaybackState(stateBuilder.build());
+
+        if (state == PlaybackState.STATE_PLAYING || state == PlaybackState.STATE_PAUSED) {
+            mMediaNotificationManager.startNotification();
+        }
+    }
+
+    private long getAvailableActions() {
+        long actions = PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PLAY_FROM_MEDIA_ID
+                | PlaybackState.ACTION_PLAY_FROM_SEARCH;
+        if (mPlayingQueue == null || mPlayingQueue.isEmpty()) {
+            return actions;
+        }
+        if (mPlayback.isPlaying()) {
+            actions |= PlaybackState.ACTION_PAUSE;
+        }
+        if (mQueueSeqence.hasPrev()) {
+            actions |= PlaybackState.ACTION_SKIP_TO_PREVIOUS;
+        }
+        if (mQueueSeqence.hasNext()) {
+            actions |= PlaybackState.ACTION_SKIP_TO_NEXT;
+        }
+        return actions;
+    }
+
+    private MediaMetadata getCurrentPlayingMusic() {
+        if (QueueHelper.isIndexPlayable(mQueueSeqence.getCurrent(), mPlayingQueue)) {
+            MediaSession.QueueItem item = mPlayingQueue.get(mQueueSeqence.getCurrent());
+            if (item != null) {
+                LogHelper.d(TAG,
+                        "getCurrentPlayingMusic for musicId=", item.getDescription().getMediaId());
+                return mMusicProvider
+                        .getMusicByMediaId(MediaIDHelper.extractMusicIDFromMediaID(
+                                item.getDescription().getMediaId()))
+                        .getMetadata();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Implementation of the Playback.Callback interface
+     */
+    @Override
+    public void onCompletion() {
+        // The media player finished playing the current song, so we go ahead
+        // and start the next.
+        if (mPlayingQueue != null && !mPlayingQueue.isEmpty()) {
+            switch (mRepeatMode) {
+                case REPEAT_ALL:
+                    if (mQueueSeqence.hasNext()) {
+                        // Increase the index
+                        mQueueSeqence.next();
+                    } else {
+                        // Restart queue when reaching the end
+                        mQueueSeqence.reset();
+                    }
+                    break;
+                case REPEAT_CURRENT:
+                    // Do not change the index
+                    break;
+                case REPEAT_NONE:
+                default:
+                    if (mQueueSeqence.hasNext()) {
+                        // Increase the index
+                        mQueueSeqence.next();
+                    } else {
+                        // Stop the queue when reaching the end
+                        handleStopRequest(null);
+                    }
+                    break;
+            }
+            handlePlayRequest();
+        } else {
+            // If there is nothing to play, we stop and release the resources:
+            handleStopRequest(null);
+        }
+    }
+
+    @Override
+    public void onPlaybackStatusChanged(int state) {
+        updatePlaybackState(null);
+    }
+
+    @Override
+    public void onError(String error) {
+        updatePlaybackState(error);
+    }
+
+    private Sequence createSequence(int length) {
+        // Create new sequence based on current shuffle mode
+        if (mShuffleMode == ShuffleMode.SHUFFLE_RANDOM) {
+            return new RandomSequence(length);
+        }
+        return new Sequence(length);
+    }
+
+    private void updateSequence() {
+        // Get current playing index
+        int current = mQueueSeqence.getCurrent();
+        // Create new sequence with current shuffle mode
+        mQueueSeqence = createSequence(mQueueSeqence.getLength());
+        // Restore current playing index
+        mQueueSeqence.setCurrent(current);
+    }
+
+    public enum RepeatMode {REPEAT_NONE, REPEAT_ALL, REPEAT_CURRENT}
+
+    public enum ShuffleMode {SHUFFLE_NONE, SHUFFLE_RANDOM}
+
+    /**
+     * A simple handler that stops the service if playback is not active (playing)
+     */
+    private static class DelayedStopHandler extends Handler {
+        private final WeakReference<MediaPlaybackService> mWeakReference;
+
+        private DelayedStopHandler(MediaPlaybackService service) {
+            mWeakReference = new WeakReference<>(service);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            MediaPlaybackService service = mWeakReference.get();
+            if (service != null && service.mPlayback != null) {
+                if (service.mPlayback.isPlaying()) {
+                    Log.d(TAG, "Ignoring delayed stop since the media player is in use.");
+                    return;
+                }
+                Log.d(TAG, "Stopping service with delay handler.");
+                service.stopSelf();
+                service.mServiceStarted = false;
+            }
+        }
+    }
+
+    /*
+     * Sequence of integers 0..n-1 in order
+     */
+    private static class Sequence {
+        private final int mLength;
+        private int mCurrent;
+
+        private Sequence(int length) {
+            mLength = length;
+            mCurrent = 0;
+        }
+
+        void reset() {
+            mCurrent = 0;
+        }
+
+        int getLength() {
+            return mLength;
+        }
+
+        int getCurrent() {
+            return mCurrent;
+        }
+
+        void setCurrent(int current) {
+            if (current < 0 || current >= mLength) {
+                throw new IllegalArgumentException();
+            }
+            mCurrent = current;
+        }
+
+        boolean hasNext() {
+            return mCurrent < mLength - 1;
+        }
+
+        boolean hasPrev() {
+            return mCurrent > 0;
+        }
+
+        void next() {
+            if (!hasNext()) {
+                throw new IllegalStateException();
+            }
+            ++mCurrent;
+        }
+
+        void prev() {
+            if (!hasPrev()) {
+                throw new IllegalStateException();
+            }
+            --mCurrent;
+        }
+    }
+
+    /*
+     * Random sequence of integers 0..n-1
+     */
+    private static class RandomSequence extends Sequence {
+        private final ArrayList<Integer> mShuffledSequence;
+
+        private RandomSequence(int length) {
+            super(length);
+            mShuffledSequence = new ArrayList<>(length);
+            for (int i = 0; i < length; ++i) {
+                mShuffledSequence.add(i);
+            }
+            Collections.shuffle(mShuffledSequence);
+        }
+
+        @Override
+        void reset() {
+            super.reset();
+            Collections.shuffle(mShuffledSequence);
+        }
+
+        @Override
+        int getCurrent() {
+            return mShuffledSequence.get(super.getCurrent());
+        }
+
+        @Override
+        void setCurrent(int current) {
+            super.setCurrent(mShuffledSequence.indexOf(current));
         }
     }
 
@@ -510,378 +880,6 @@ public class MediaPlaybackService extends MediaBrowserService implements Playbac
                     LogHelper.d(TAG, "Unkown action=", action);
                     break;
             }
-        }
-    }
-
-    /**
-     * Handle a request to play music
-     */
-    private void handlePlayRequest() {
-        LogHelper.d(TAG, "handlePlayRequest: mState=" + mPlayback.getState());
-
-        mDelayedStopHandler.removeCallbacksAndMessages(null);
-        if (!mServiceStarted) {
-            LogHelper.v(TAG, "Starting service");
-            // The MusicService needs to keep running even after the calling MediaBrowser
-            // is disconnected. Call startService(Intent) and then stopSelf(..) when we no longer
-            // need to play media.
-            startService(new Intent(getApplicationContext(), MediaPlaybackService.class));
-            mServiceStarted = true;
-        }
-
-        if (!mSession.isActive()) {
-            mSession.setActive(true);
-        }
-
-        if (QueueHelper.isIndexPlayable(mQueueSeqence.getCurrent(), mPlayingQueue)) {
-            updateMetadata();
-            mPlayback.play(mPlayingQueue.get(mQueueSeqence.getCurrent()));
-        }
-    }
-
-    /**
-     * Handle a request to pause music
-     */
-    private void handlePauseRequest() {
-        LogHelper.d(TAG, "handlePauseRequest: mState=" + mPlayback.getState());
-        mPlayback.pause();
-        // reset the delayed stop handler.
-        mDelayedStopHandler.removeCallbacksAndMessages(null);
-        mDelayedStopHandler.sendEmptyMessageDelayed(0, STOP_DELAY);
-    }
-
-    /**
-     * Handle a request to stop music
-     */
-    private void handleStopRequest(String withError) {
-        LogHelper.d(
-                TAG, "handleStopRequest: mState=" + mPlayback.getState() + " error=", withError);
-        mPlayback.stop(true);
-        // reset the delayed stop handler.
-        mDelayedStopHandler.removeCallbacksAndMessages(null);
-        mDelayedStopHandler.sendEmptyMessageDelayed(0, STOP_DELAY);
-
-        updatePlaybackState(withError);
-
-        // service is no longer necessary. Will be started again if needed.
-        stopSelf();
-        mServiceStarted = false;
-    }
-
-    private void updateMetadata() {
-        if (!QueueHelper.isIndexPlayable(mQueueSeqence.getCurrent(), mPlayingQueue)) {
-            LogHelper.e(TAG, "Can't retrieve current metadata.");
-            updatePlaybackState(getResources().getString(R.string.error_no_metadata));
-            return;
-        }
-        MediaSession.QueueItem queueItem = mPlayingQueue.get(mQueueSeqence.getCurrent());
-        String musicId =
-                MediaIDHelper.extractMusicIDFromMediaID(queueItem.getDescription().getMediaId());
-        MediaMetadata track = mMusicProvider.getMusicByMediaId(musicId).getMetadata();
-        final String trackId = track.getString(MediaMetadata.METADATA_KEY_MEDIA_ID);
-        if (!musicId.equals(trackId)) {
-            IllegalStateException e = new IllegalStateException("track ID should match musicId.");
-            LogHelper.e(TAG, "track ID should match musicId.", " musicId=", musicId,
-                    " trackId=", trackId,
-                    " mediaId from queueItem=", queueItem.getDescription().getMediaId(),
-                    " title from queueItem=", queueItem.getDescription().getTitle(),
-                    " mediaId from track=", track.getDescription().getMediaId(),
-                    " title from track=", track.getDescription().getTitle(),
-                    " source.hashcode from track=",
-                    track.getString(MusicProvider.CUSTOM_METADATA_TRACK_SOURCE).hashCode(), e);
-            throw e;
-        }
-        LogHelper.d(TAG, "Updating metadata for MusicID= " + musicId);
-        mSession.setMetadata(track);
-
-        // Set the proper album artwork on the media session, so it can be shown in the
-        // locked screen and in other places.
-        if (track.getDescription().getIconBitmap() == null
-                && track.getDescription().getIconUri() != null) {
-            String albumUri = track.getDescription().getIconUri().toString();
-            AlbumArtCache.getInstance().fetch(albumUri, new AlbumArtCache.FetchListener() {
-                @Override
-                public void onFetched(String artUrl, Bitmap bitmap, Bitmap icon) {
-                    MediaSession.QueueItem queueItem =
-                            mPlayingQueue.get(mQueueSeqence.getCurrent());
-                    MediaMetadata track = mMusicProvider.getMusicByMediaId(trackId).getMetadata();
-                    track = new MediaMetadata
-                                    .Builder(track)
-
-                                    // set high resolution bitmap in METADATA_KEY_ALBUM_ART. This is
-                                    // used, for
-                                    // example, on the lockscreen background when the media session
-                                    // is active.
-                                    .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, bitmap)
-
-                                    // set small version of the album art in the DISPLAY_ICON. This
-                                    // is used on
-                                    // the MediaDescription and thus it should be small to be
-                                    // serialized if
-                                    // necessary..
-                                    .putBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON, icon)
-
-                                    .build();
-
-                    mMusicProvider.updateMusic(trackId, track);
-
-                    // If we are still playing the same music
-                    String currentPlayingId = MediaIDHelper.extractMusicIDFromMediaID(
-                            queueItem.getDescription().getMediaId());
-                    if (trackId.equals(currentPlayingId)) {
-                        mSession.setMetadata(track);
-                    }
-                }
-            });
-        }
-    }
-
-    /**
-     * Update the current media player state, optionally showing an error message.
-     *
-     * @param error if not null, error message to present to the user.
-     */
-    private void updatePlaybackState(String error) {
-        LogHelper.d(TAG, "updatePlaybackState, playback state=" + mPlayback.getState());
-        long position = PlaybackState.PLAYBACK_POSITION_UNKNOWN;
-        if (mPlayback != null && mPlayback.isConnected()) {
-            position = mPlayback.getCurrentStreamPosition();
-        }
-
-        PlaybackState.Builder stateBuilder =
-                new PlaybackState.Builder().setActions(getAvailableActions());
-
-        int state = mPlayback.getState();
-
-        // If there is an error message, send it to the playback state:
-        if (error != null) {
-            // Error states are really only supposed to be used for errors that cause playback to
-            // stop unexpectedly and persist until the user takes action to fix it.
-            stateBuilder.setErrorMessage(error);
-            state = PlaybackState.STATE_ERROR;
-        }
-        stateBuilder.setState(state, position, 1.0f, SystemClock.elapsedRealtime());
-
-        // Set the activeQueueItemId if the current index is valid.
-        if (QueueHelper.isIndexPlayable(mQueueSeqence.getCurrent(), mPlayingQueue)) {
-            MediaSession.QueueItem item = mPlayingQueue.get(mQueueSeqence.getCurrent());
-            stateBuilder.setActiveQueueItemId(item.getQueueId());
-        }
-
-        mSession.setPlaybackState(stateBuilder.build());
-
-        if (state == PlaybackState.STATE_PLAYING || state == PlaybackState.STATE_PAUSED) {
-            mMediaNotificationManager.startNotification();
-        }
-    }
-
-    private long getAvailableActions() {
-        long actions = PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PLAY_FROM_MEDIA_ID
-                | PlaybackState.ACTION_PLAY_FROM_SEARCH;
-        if (mPlayingQueue == null || mPlayingQueue.isEmpty()) {
-            return actions;
-        }
-        if (mPlayback.isPlaying()) {
-            actions |= PlaybackState.ACTION_PAUSE;
-        }
-        if (mQueueSeqence.hasPrev()) {
-            actions |= PlaybackState.ACTION_SKIP_TO_PREVIOUS;
-        }
-        if (mQueueSeqence.hasNext()) {
-            actions |= PlaybackState.ACTION_SKIP_TO_NEXT;
-        }
-        return actions;
-    }
-
-    private MediaMetadata getCurrentPlayingMusic() {
-        if (QueueHelper.isIndexPlayable(mQueueSeqence.getCurrent(), mPlayingQueue)) {
-            MediaSession.QueueItem item = mPlayingQueue.get(mQueueSeqence.getCurrent());
-            if (item != null) {
-                LogHelper.d(TAG,
-                        "getCurrentPlayingMusic for musicId=", item.getDescription().getMediaId());
-                return mMusicProvider
-                        .getMusicByMediaId(MediaIDHelper.extractMusicIDFromMediaID(
-                                item.getDescription().getMediaId()))
-                        .getMetadata();
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Implementation of the Playback.Callback interface
-     */
-    @Override
-    public void onCompletion() {
-        // The media player finished playing the current song, so we go ahead
-        // and start the next.
-        if (mPlayingQueue != null && !mPlayingQueue.isEmpty()) {
-            switch (mRepeatMode) {
-                case REPEAT_ALL:
-                    if (mQueueSeqence.hasNext()) {
-                        // Increase the index
-                        mQueueSeqence.next();
-                    } else {
-                        // Restart queue when reaching the end
-                        mQueueSeqence.reset();
-                    }
-                    break;
-                case REPEAT_CURRENT:
-                    // Do not change the index
-                    break;
-                case REPEAT_NONE:
-                default:
-                    if (mQueueSeqence.hasNext()) {
-                        // Increase the index
-                        mQueueSeqence.next();
-                    } else {
-                        // Stop the queue when reaching the end
-                        handleStopRequest(null);
-                    }
-                    break;
-            }
-            handlePlayRequest();
-        } else {
-            // If there is nothing to play, we stop and release the resources:
-            handleStopRequest(null);
-        }
-    }
-
-    @Override
-    public void onPlaybackStatusChanged(int state) {
-        updatePlaybackState(null);
-    }
-
-    @Override
-    public void onError(String error) {
-        updatePlaybackState(error);
-    }
-
-    /**
-     * A simple handler that stops the service if playback is not active (playing)
-     */
-    private static class DelayedStopHandler extends Handler {
-        private final WeakReference<MediaPlaybackService> mWeakReference;
-
-        private DelayedStopHandler(MediaPlaybackService service) {
-            mWeakReference = new WeakReference<>(service);
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            MediaPlaybackService service = mWeakReference.get();
-            if (service != null && service.mPlayback != null) {
-                if (service.mPlayback.isPlaying()) {
-                    Log.d(TAG, "Ignoring delayed stop since the media player is in use.");
-                    return;
-                }
-                Log.d(TAG, "Stopping service with delay handler.");
-                service.stopSelf();
-                service.mServiceStarted = false;
-            }
-        }
-    }
-
-    private Sequence createSequence(int length) {
-        // Create new sequence based on current shuffle mode
-        if (mShuffleMode == ShuffleMode.SHUFFLE_RANDOM) {
-            return new RandomSequence(length);
-        }
-        return new Sequence(length);
-    }
-
-    private void updateSequence() {
-        // Get current playing index
-        int current = mQueueSeqence.getCurrent();
-        // Create new sequence with current shuffle mode
-        mQueueSeqence = createSequence(mQueueSeqence.getLength());
-        // Restore current playing index
-        mQueueSeqence.setCurrent(current);
-    }
-
-    /*
-     * Sequence of integers 0..n-1 in order
-     */
-    private static class Sequence {
-        private final int mLength;
-        private int mCurrent;
-
-        private Sequence(int length) {
-            mLength = length;
-            mCurrent = 0;
-        }
-
-        void reset() {
-            mCurrent = 0;
-        }
-
-        int getLength() {
-            return mLength;
-        }
-
-        void setCurrent(int current) {
-            if (current < 0 || current >= mLength) {
-                throw new IllegalArgumentException();
-            }
-            mCurrent = current;
-        }
-
-        int getCurrent() {
-            return mCurrent;
-        }
-
-        boolean hasNext() {
-            return mCurrent < mLength - 1;
-        }
-
-        boolean hasPrev() {
-            return mCurrent > 0;
-        }
-
-        void next() {
-            if (!hasNext()) {
-                throw new IllegalStateException();
-            }
-            ++mCurrent;
-        }
-
-        void prev() {
-            if (!hasPrev()) {
-                throw new IllegalStateException();
-            }
-            --mCurrent;
-        }
-    }
-
-    /*
-     * Random sequence of integers 0..n-1
-     */
-    private static class RandomSequence extends Sequence {
-        private final ArrayList<Integer> mShuffledSequence;
-
-        private RandomSequence(int length) {
-            super(length);
-            mShuffledSequence = new ArrayList<>(length);
-            for (int i = 0; i < length; ++i) {
-                mShuffledSequence.add(i);
-            }
-            Collections.shuffle(mShuffledSequence);
-        }
-
-        @Override
-        void reset() {
-            super.reset();
-            Collections.shuffle(mShuffledSequence);
-        }
-
-        @Override
-        void setCurrent(int current) {
-            super.setCurrent(mShuffledSequence.indexOf(current));
-        }
-
-        @Override
-        int getCurrent() {
-            return mShuffledSequence.get(super.getCurrent());
         }
     }
 }

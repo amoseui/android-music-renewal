@@ -33,6 +33,14 @@ public class RepeatingImageButton extends ImageButton {
     private int mRepeatCount;
     private RepeatListener mListener;
     private long mInterval = 500;
+    private Runnable mRepeater = new Runnable() {
+        public void run() {
+            doRepeat(false);
+            if (isPressed()) {
+                postDelayed(this, mInterval);
+            }
+        }
+    };
 
     public RepeatingImageButton(Context context) {
         this(context, null);
@@ -51,7 +59,8 @@ public class RepeatingImageButton extends ImageButton {
     /**
      * Sets the listener to be called while the button is pressed and
      * the interval in milliseconds with which it will be called.
-     * @param l The listener that will be called
+     *
+     * @param l        The listener that will be called
      * @param interval The interval in milliseconds for calls
      */
     public void setRepeatListener(RepeatListener l, long interval) {
@@ -108,15 +117,6 @@ public class RepeatingImageButton extends ImageButton {
         return super.onKeyUp(keyCode, event);
     }
 
-    private Runnable mRepeater = new Runnable() {
-        public void run() {
-            doRepeat(false);
-            if (isPressed()) {
-                postDelayed(this, mInterval);
-            }
-        }
-    };
-
     private void doRepeat(boolean last) {
         long now = SystemClock.elapsedRealtime();
         if (mListener != null) {
@@ -129,11 +129,12 @@ public class RepeatingImageButton extends ImageButton {
          * This method will be called repeatedly at roughly the interval
          * specified in setRepeatListener(), for as long as the button
          * is pressed.
-         * @param v The button as a View.
-         * @param duration The number of milliseconds the button has been pressed so far.
+         *
+         * @param v           The button as a View.
+         * @param duration    The number of milliseconds the button has been pressed so far.
          * @param repeatcount The number of previous calls in this sequence.
-         * If this is going to be the last call in this sequence (i.e. the user
-         * just stopped pressing the button), the value will be -1.
+         *                    If this is going to be the last call in this sequence (i.e. the user
+         *                    just stopped pressing the button), the value will be -1.
          */
         void onRepeat(View v, long duration, int repeatcount);
     }

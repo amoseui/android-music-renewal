@@ -27,11 +27,13 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 
-import com.amoseui.music.R;
-
 public class VerticalTextSpinner extends View {
     private static final int SELECTOR_ARROW_HEIGHT = 15;
-
+    private static final int SCROLL_MODE_NONE = 0;
+    private static final int SCROLL_MODE_UP = 1;
+    private static final int SCROLL_MODE_DOWN = 2;
+    private static final long DEFAULT_SCROLL_INTERVAL_MS = 400;
+    private static final int MIN_ANIMATIONS = 4;
     private static int TEXT_SPACING;
     private static int TEXT_MARGIN_RIGHT;
     private static int TEXT_SIZE;
@@ -41,14 +43,6 @@ public class VerticalTextSpinner extends View {
     private static int TEXT4_Y;
     private static int TEXT5_Y;
     private static int SCROLL_DISTANCE;
-
-    private static final int SCROLL_MODE_NONE = 0;
-    private static final int SCROLL_MODE_UP = 1;
-    private static final int SCROLL_MODE_DOWN = 2;
-
-    private static final long DEFAULT_SCROLL_INTERVAL_MS = 400;
-    private static final int MIN_ANIMATIONS = 4;
-
     private final Drawable mBackgroundFocused;
     private final Drawable mSelectorFocused;
     private final Drawable mSelectorNormal;
@@ -83,10 +77,6 @@ public class VerticalTextSpinner extends View {
     private String mText3;
     private String mText4;
     private String mText5;
-
-    public interface OnChangedListener {
-        void onChanged(VerticalTextSpinner spinner, int oldPos, int newPos, String[] items);
-    }
 
     public VerticalTextSpinner(Context context) {
         this(context, null);
@@ -457,5 +447,9 @@ public class VerticalTextSpinner extends View {
 
     public int getCurrentSelectedPos() {
         return mCurrentSelectedPos;
+    }
+
+    public interface OnChangedListener {
+        void onChanged(VerticalTextSpinner spinner, int oldPos, int newPos, String[] items);
     }
 }

@@ -27,13 +27,13 @@ import junit.framework.TestSuite;
 
 /**
  * Instrumentation Test Runner for all Music Player tests.
- * 
+ * <p>
  * Precondition: Opened keyboard and wipe the userdata
- * 
+ * <p>
  * Running all tests:
- *
+ * <p>
  * adb shell am instrument \
- *   -w com.amoseui.music.tests/.MusicPlayerFunctionalTestRunner
+ * -w com.amoseui.music.tests/.MusicPlayerFunctionalTestRunner
  */
 
 public class MusicPlayerFunctionalTestRunner extends InstrumentationTestRunner {
@@ -41,7 +41,7 @@ public class MusicPlayerFunctionalTestRunner extends InstrumentationTestRunner {
 
     @Override
     public TestSuite getAllTests() {
-        TestSuite suite = new InstrumentationTestSuite(this);  
+        TestSuite suite = new InstrumentationTestSuite(this);
         suite.addTestSuite(TestSongs.class);
         suite.addTestSuite(TestPlaylist.class);
         suite.addTestSuite(MusicPlayerStability.class);

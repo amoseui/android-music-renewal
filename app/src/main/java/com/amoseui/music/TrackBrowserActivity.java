@@ -33,9 +33,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.widget.*;
+import android.widget.ArrayAdapter;
+import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
 
-import com.amoseui.music.R;
 import com.amoseui.music.utils.LogHelper;
 import com.amoseui.music.utils.MediaIDHelper;
 
@@ -52,9 +55,9 @@ public class TrackBrowserActivity extends ListActivity {
     private static final String TAG = LogHelper.makeLogTag(TrackBrowserActivity.class);
     private static final MediaBrowser.MediaItem DEFAULT_PARENT_ITEM =
             new MediaBrowser.MediaItem(new MediaDescription.Builder()
-                                               .setMediaId(MediaIDHelper.MEDIA_ID_MUSICS_BY_SONG)
-                                               .setTitle("Songs")
-                                               .build(),
+                    .setMediaId(MediaIDHelper.MEDIA_ID_MUSICS_BY_SONG)
+                    .setTitle("Songs")
+                    .build(),
                     MediaBrowser.MediaItem.FLAG_BROWSABLE);
 
     // Underlining ListView of this Activity
@@ -64,6 +67,68 @@ public class TrackBrowserActivity extends ListActivity {
     private MediaBrowser mMediaBrowser;
     private TrackBrowseAdapter mBrowseListAdapter;
     private boolean mWithTabs;
+    private MediaBrowser.SubscriptionCallback mSubscriptionCallback =
+            new MediaBrowser.SubscriptionCallback() {
+
+                @Override
+                public void onChildrenLoaded(
+                        String parentId, List<MediaBrowser.MediaItem> children) {
+                    mBrowseListAdapter.clear();
+                    mBrowseListAdapter.notifyDataSetInvalidated();
+                    for (MediaBrowser.MediaItem item : children) {
+                        mBrowseListAdapter.add(item);
+                    }
+                    mBrowseListAdapter.notifyDataSetChanged();
+                }
+
+                @Override
+                public void onError(String id) {
+                    Toast.makeText(getApplicationContext(), R.string.error_loading_media,
+                            Toast.LENGTH_LONG)
+                            .show();
+                }
+            };
+    private MediaController.Callback mMediaControllerCallback = new MediaController.Callback() {
+        @Override
+        public void onMetadataChanged(MediaMetadata metadata) {
+            super.onMetadataChanged(metadata);
+            if (mWithTabs) {
+                MusicUtils.updateNowPlaying(TrackBrowserActivity.this);
+            }
+            if (mBrowseListAdapter != null) {
+                mBrowseListAdapter.notifyDataSetChanged();
+            }
+        }
+    };
+    private MediaBrowser.ConnectionCallback mConnectionCallback =
+            new MediaBrowser.ConnectionCallback() {
+                @Override
+                public void onConnected() {
+                    Log.d(TAG, "onConnected: session token " + mMediaBrowser.getSessionToken());
+                    mMediaBrowser.subscribe(mParentItem.getMediaId(), mSubscriptionCallback);
+                    if (mMediaBrowser.getSessionToken() == null) {
+                        throw new IllegalArgumentException("No Session token");
+                    }
+                    MediaController mediaController = new MediaController(
+                            TrackBrowserActivity.this, mMediaBrowser.getSessionToken());
+                    mediaController.registerCallback(mMediaControllerCallback);
+                    TrackBrowserActivity.this.setMediaController(mediaController);
+                    if (mediaController.getMetadata() != null && mWithTabs) {
+                        MusicUtils.updateNowPlaying(TrackBrowserActivity.this);
+                    }
+                }
+
+                @Override
+                public void onConnectionFailed() {
+                    Log.d(TAG, "onConnectionFailed");
+                }
+
+                @Override
+                public void onConnectionSuspended() {
+                    Log.d(TAG, "onConnectionSuspended");
+                    TrackBrowserActivity.this.setMediaController(null);
+                }
+            };
 
     /**
      * Called when the activity is first created.
@@ -169,83 +234,26 @@ public class TrackBrowserActivity extends ListActivity {
         super.onSaveInstanceState(outcicle);
     }
 
-    private MediaBrowser.SubscriptionCallback mSubscriptionCallback =
-            new MediaBrowser.SubscriptionCallback() {
+    @Override
+    public Object onRetainNonConfigurationInstance() {
+        TrackBrowseAdapter a = mBrowseListAdapter;
+        return a;
+    }
 
-                @Override
-                public void onChildrenLoaded(
-                        String parentId, List<MediaBrowser.MediaItem> children) {
-                    mBrowseListAdapter.clear();
-                    mBrowseListAdapter.notifyDataSetInvalidated();
-                    for (MediaBrowser.MediaItem item : children) {
-                        mBrowseListAdapter.add(item);
-                    }
-                    mBrowseListAdapter.notifyDataSetChanged();
-                }
-
-                @Override
-                public void onError(String id) {
-                    Toast.makeText(getApplicationContext(), R.string.error_loading_media,
-                                 Toast.LENGTH_LONG)
-                            .show();
-                }
-            };
-
-    private MediaBrowser.ConnectionCallback mConnectionCallback =
-            new MediaBrowser.ConnectionCallback() {
-                @Override
-                public void onConnected() {
-                    Log.d(TAG, "onConnected: session token " + mMediaBrowser.getSessionToken());
-                    mMediaBrowser.subscribe(mParentItem.getMediaId(), mSubscriptionCallback);
-                    if (mMediaBrowser.getSessionToken() == null) {
-                        throw new IllegalArgumentException("No Session token");
-                    }
-                    MediaController mediaController = new MediaController(
-                            TrackBrowserActivity.this, mMediaBrowser.getSessionToken());
-                    mediaController.registerCallback(mMediaControllerCallback);
-                    TrackBrowserActivity.this.setMediaController(mediaController);
-                    if (mediaController.getMetadata() != null && mWithTabs) {
-                        MusicUtils.updateNowPlaying(TrackBrowserActivity.this);
-                    }
-                }
-
-                @Override
-                public void onConnectionFailed() {
-                    Log.d(TAG, "onConnectionFailed");
-                }
-
-                @Override
-                public void onConnectionSuspended() {
-                    Log.d(TAG, "onConnectionSuspended");
-                    TrackBrowserActivity.this.setMediaController(null);
-                }
-            };
-
-    private MediaController.Callback mMediaControllerCallback = new MediaController.Callback() {
-        @Override
-        public void onMetadataChanged(MediaMetadata metadata) {
-            super.onMetadataChanged(metadata);
-            if (mWithTabs) {
-                MusicUtils.updateNowPlaying(TrackBrowserActivity.this);
-            }
-            if (mBrowseListAdapter != null) {
-                mBrowseListAdapter.notifyDataSetChanged();
-            }
+    @Override
+    protected void onListItemClick(ListView l, View v, int position, long id) {
+        Log.d(TAG, "onListItemClick at position " + position + ", id " + id);
+        MediaBrowser.MediaItem item = mBrowseListAdapter.getItem(position);
+        if (item.isPlayable()) {
+            getMediaController().getTransportControls().playFromMediaId(item.getMediaId(), null);
         }
-    };
+    }
 
     // An adapter for showing the list of browsed MediaItem's
     private static class TrackBrowseAdapter extends ArrayAdapter<MediaBrowser.MediaItem> {
-        private int mLayoutId;
         private final Drawable mNowPlayingOverlay;
+        private int mLayoutId;
         private Activity mActivity;
-
-        static class ViewHolder {
-            TextView line1;
-            TextView line2;
-            TextView duration;
-            ImageView play_indicator;
-        }
 
         TrackBrowseAdapter(Activity activity, int layout) {
             super(activity, layout);
@@ -290,27 +298,19 @@ public class TrackBrowserActivity extends ListActivity {
                 return convertView;
             }
             if (item.getDescription().getMediaId().endsWith(
-                        metadata.getString(MediaMetadata.METADATA_KEY_MEDIA_ID))) {
+                    metadata.getString(MediaMetadata.METADATA_KEY_MEDIA_ID))) {
                 holder.play_indicator.setImageDrawable(mNowPlayingOverlay);
             } else {
                 holder.play_indicator.setImageDrawable(null);
             }
             return convertView;
         }
-    }
 
-    @Override
-    public Object onRetainNonConfigurationInstance() {
-        TrackBrowseAdapter a = mBrowseListAdapter;
-        return a;
-    }
-
-    @Override
-    protected void onListItemClick(ListView l, View v, int position, long id) {
-        Log.d(TAG, "onListItemClick at position " + position + ", id " + id);
-        MediaBrowser.MediaItem item = mBrowseListAdapter.getItem(position);
-        if (item.isPlayable()) {
-            getMediaController().getTransportControls().playFromMediaId(item.getMediaId(), null);
+        static class ViewHolder {
+            TextView line1;
+            TextView line2;
+            TextView duration;
+            ImageView play_indicator;
         }
     }
 }

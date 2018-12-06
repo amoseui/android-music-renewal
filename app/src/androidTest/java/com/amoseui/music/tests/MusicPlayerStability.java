@@ -17,26 +17,24 @@
 package com.amoseui.music.tests;
 
 import android.app.Instrumentation;
-
-import com.amoseui.music.TrackBrowserActivity;
-
+import android.test.ActivityInstrumentationTestCase2;
+import android.test.suitebuilder.annotation.LargeTest;
 import android.view.KeyEvent;
 import android.widget.ListView;
 
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.suitebuilder.annotation.LargeTest;
+import com.amoseui.music.TrackBrowserActivity;
 
 /**
  * Junit / Instrumentation test case for the Music Player
  */
 
-public class MusicPlayerStability extends ActivityInstrumentationTestCase2 <TrackBrowserActivity>{
+public class MusicPlayerStability extends ActivityInstrumentationTestCase2<TrackBrowserActivity> {
     private static String TAG = "musicplayerstability";
     private static int PLAY_TIME = 30000;
     private ListView mTrackList;
 
     public MusicPlayerStability() {
-        super("com.amoseui.music",TrackBrowserActivity.class);
+        super("com.amoseui.music", TrackBrowserActivity.class);
     }
 
     @Override

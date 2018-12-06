@@ -23,24 +23,24 @@ import android.graphics.Bitmap;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.LevelListDrawable;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.GestureDetector;
+import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.view.GestureDetector.SimpleOnGestureListener;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
 
-import com.amoseui.music.R;
-
 public class TouchInterceptor extends ListView {
+    private static final int FLING = 0;
+    private static final int SLIDE = 1;
+    private static final int TRASH = 2;
+    private final int mTouchSlop;
     private ImageView mDragView;
     private WindowManager mWindowManager;
     private WindowManager.LayoutParams mWindowParams;
@@ -64,13 +64,9 @@ public class TouchInterceptor extends ListView {
     private int mLowerBound;
     private int mHeight;
     private GestureDetector mGestureDetector;
-    private static final int FLING = 0;
-    private static final int SLIDE = 1;
-    private static final int TRASH = 2;
     private int mRemoveMode = -1;
     private Rect mTempRect = new Rect();
     private Bitmap mDragBitmap;
-    private final int mTouchSlop;
     private int mItemHeightNormal;
     private int mItemHeightExpanded;
     private int mItemHeightHalf;
@@ -205,7 +201,7 @@ public class TouchInterceptor extends ListView {
      * Restore size and visibility for all listitems
      */
     private void unExpandViews(boolean deletion) {
-        for (int i = 0;; i++) {
+        for (int i = 0; ; i++) {
             View v = getChildAt(i);
             if (v == null) {
                 if (deletion) {
@@ -255,7 +251,7 @@ public class TouchInterceptor extends ListView {
         int numheaders = getHeaderViewsCount();
 
         View first = getChildAt(mSrcDragPos - getFirstVisiblePosition());
-        for (int i = 0;; i++) {
+        for (int i = 0; ; i++) {
             View vv = getChildAt(i);
             if (vv == null) {
                 break;
@@ -463,7 +459,15 @@ public class TouchInterceptor extends ListView {
         mRemoveListener = l;
     }
 
-    public interface DragListener { void drag(int from, int to); }
-    public interface DropListener { void drop(int from, int to); }
-    public interface RemoveListener { void remove(int which); }
+    public interface DragListener {
+        void drag(int from, int to);
+    }
+
+    public interface DropListener {
+        void drop(int from, int to);
+    }
+
+    public interface RemoveListener {
+        void remove(int which);
+    }
 }

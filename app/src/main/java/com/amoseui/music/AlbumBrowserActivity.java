@@ -36,9 +36,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.widget.*;
+import android.widget.ArrayAdapter;
+import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
 
-import com.amoseui.music.R;
 import com.amoseui.music.utils.LogHelper;
 import com.amoseui.music.utils.MediaIDHelper;
 
@@ -51,16 +54,78 @@ public class AlbumBrowserActivity extends ListActivity {
     private static final String TAG = LogHelper.makeLogTag(AlbumBrowserActivity.class);
     private static final MediaBrowser.MediaItem DEFAULT_PARENT_ITEM =
             new MediaBrowser.MediaItem(new MediaDescription.Builder()
-                                               .setMediaId(MediaIDHelper.MEDIA_ID_MUSICS_BY_ALBUM)
-                                               .build(),
+                    .setMediaId(MediaIDHelper.MEDIA_ID_MUSICS_BY_ALBUM)
+                    .build(),
                     MediaBrowser.MediaItem.FLAG_BROWSABLE);
 
     private ListView mAlbumList;
     private AlbumBrowseAdapter mBrowseListAdapter;
     private MediaBrowser mMediaBrowser;
     private MediaBrowser.MediaItem mParentItem;
+    private MediaBrowser.SubscriptionCallback mSubscriptionCallback =
+            new MediaBrowser.SubscriptionCallback() {
 
-    /** Called when the activity is first created. */
+                @Override
+                public void onChildrenLoaded(
+                        String parentId, List<MediaBrowser.MediaItem> children) {
+                    mBrowseListAdapter.clear();
+                    mBrowseListAdapter.notifyDataSetInvalidated();
+                    for (MediaBrowser.MediaItem item : children) {
+                        mBrowseListAdapter.add(item);
+                    }
+                    mBrowseListAdapter.notifyDataSetChanged();
+                }
+
+                @Override
+                public void onError(String id) {
+                    Toast.makeText(getApplicationContext(), R.string.error_loading_media,
+                            Toast.LENGTH_LONG)
+                            .show();
+                }
+            };
+    private MediaController.Callback mMediaControllerCallback = new MediaController.Callback() {
+        @Override
+        public void onMetadataChanged(MediaMetadata metadata) {
+            super.onMetadataChanged(metadata);
+            MusicUtils.updateNowPlaying(AlbumBrowserActivity.this);
+            if (mBrowseListAdapter != null) {
+                mBrowseListAdapter.notifyDataSetChanged();
+            }
+        }
+    };
+    private MediaBrowser.ConnectionCallback mConnectionCallback =
+            new MediaBrowser.ConnectionCallback() {
+                @Override
+                public void onConnected() {
+                    Log.d(TAG, "onConnected: session token " + mMediaBrowser.getSessionToken());
+                    mMediaBrowser.subscribe(mParentItem.getMediaId(), mSubscriptionCallback);
+                    if (mMediaBrowser.getSessionToken() == null) {
+                        throw new IllegalArgumentException("No Session token");
+                    }
+                    MediaController mediaController = new MediaController(
+                            AlbumBrowserActivity.this, mMediaBrowser.getSessionToken());
+                    mediaController.registerCallback(mMediaControllerCallback);
+                    AlbumBrowserActivity.this.setMediaController(mediaController);
+                    if (mediaController.getMetadata() != null) {
+                        MusicUtils.updateNowPlaying(AlbumBrowserActivity.this);
+                    }
+                }
+
+                @Override
+                public void onConnectionFailed() {
+                    Log.d(TAG, "onConnectionFailed");
+                }
+
+                @Override
+                public void onConnectionSuspended() {
+                    Log.d(TAG, "onConnectionSuspended");
+                    AlbumBrowserActivity.this.setMediaController(null);
+                }
+            };
+
+    /**
+     * Called when the activity is first created.
+     */
     @Override
     public void onCreate(Bundle icicle) {
         Log.d(TAG, "onCreate()");
@@ -143,81 +208,24 @@ public class AlbumBrowserActivity extends ListActivity {
         setTitle(R.string.albums_title);
     }
 
-    private MediaBrowser.SubscriptionCallback mSubscriptionCallback =
-            new MediaBrowser.SubscriptionCallback() {
-
-                @Override
-                public void onChildrenLoaded(
-                        String parentId, List<MediaBrowser.MediaItem> children) {
-                    mBrowseListAdapter.clear();
-                    mBrowseListAdapter.notifyDataSetInvalidated();
-                    for (MediaBrowser.MediaItem item : children) {
-                        mBrowseListAdapter.add(item);
-                    }
-                    mBrowseListAdapter.notifyDataSetChanged();
-                }
-
-                @Override
-                public void onError(String id) {
-                    Toast.makeText(getApplicationContext(), R.string.error_loading_media,
-                                 Toast.LENGTH_LONG)
-                            .show();
-                }
-            };
-
-    private MediaBrowser.ConnectionCallback mConnectionCallback =
-            new MediaBrowser.ConnectionCallback() {
-                @Override
-                public void onConnected() {
-                    Log.d(TAG, "onConnected: session token " + mMediaBrowser.getSessionToken());
-                    mMediaBrowser.subscribe(mParentItem.getMediaId(), mSubscriptionCallback);
-                    if (mMediaBrowser.getSessionToken() == null) {
-                        throw new IllegalArgumentException("No Session token");
-                    }
-                    MediaController mediaController = new MediaController(
-                            AlbumBrowserActivity.this, mMediaBrowser.getSessionToken());
-                    mediaController.registerCallback(mMediaControllerCallback);
-                    AlbumBrowserActivity.this.setMediaController(mediaController);
-                    if (mediaController.getMetadata() != null) {
-                        MusicUtils.updateNowPlaying(AlbumBrowserActivity.this);
-                    }
-                }
-
-                @Override
-                public void onConnectionFailed() {
-                    Log.d(TAG, "onConnectionFailed");
-                }
-
-                @Override
-                public void onConnectionSuspended() {
-                    Log.d(TAG, "onConnectionSuspended");
-                    AlbumBrowserActivity.this.setMediaController(null);
-                }
-            };
-
-    private MediaController.Callback mMediaControllerCallback = new MediaController.Callback() {
-        @Override
-        public void onMetadataChanged(MediaMetadata metadata) {
-            super.onMetadataChanged(metadata);
-            MusicUtils.updateNowPlaying(AlbumBrowserActivity.this);
-            if (mBrowseListAdapter != null) {
-                mBrowseListAdapter.notifyDataSetChanged();
-            }
+    @Override
+    protected void onListItemClick(ListView l, View v, int position, long id) {
+        Log.d(TAG, "onListItemClick at position " + position + ", id " + id);
+        MediaBrowser.MediaItem item = mBrowseListAdapter.getItem(position);
+        if (item.isBrowsable()) {
+            Intent intent = new Intent(Intent.ACTION_PICK);
+            intent.setDataAndType(Uri.EMPTY, "vnd.android.cursor.dir/track");
+            intent.putExtra(MusicUtils.TAG_PARENT_ITEM, item);
+            intent.putExtra(MusicUtils.TAG_WITH_TABS, false);
+            startActivity(intent);
         }
-    };
+    }
 
     // An adapter for showing the list of browsed MediaItem's
     private class AlbumBrowseAdapter extends ArrayAdapter<MediaBrowser.MediaItem> {
         private final Drawable mNowPlayingOverlay;
         private final BitmapDrawable mDefaultAlbumIcon;
         private int mLayoutId;
-
-        private class ViewHolder {
-            TextView line1;
-            TextView line2;
-            ImageView play_indicator;
-            ImageView icon;
-        }
 
         AlbumBrowseAdapter(Context context, int layout) {
             super(context, layout);
@@ -271,25 +279,19 @@ public class AlbumBrowserActivity extends ListActivity {
                 return convertView;
             }
             if (metadata.getString(MediaMetadata.METADATA_KEY_ALBUM)
-                            .equals(item.getDescription().getTitle())) {
+                    .equals(item.getDescription().getTitle())) {
                 vh.play_indicator.setImageDrawable(mNowPlayingOverlay);
             } else {
                 vh.play_indicator.setImageDrawable(null);
             }
             return convertView;
         }
-    }
 
-    @Override
-    protected void onListItemClick(ListView l, View v, int position, long id) {
-        Log.d(TAG, "onListItemClick at position " + position + ", id " + id);
-        MediaBrowser.MediaItem item = mBrowseListAdapter.getItem(position);
-        if (item.isBrowsable()) {
-            Intent intent = new Intent(Intent.ACTION_PICK);
-            intent.setDataAndType(Uri.EMPTY, "vnd.android.cursor.dir/track");
-            intent.putExtra(MusicUtils.TAG_PARENT_ITEM, item);
-            intent.putExtra(MusicUtils.TAG_WITH_TABS, false);
-            startActivity(intent);
+        private class ViewHolder {
+            TextView line1;
+            TextView line2;
+            ImageView play_indicator;
+            ImageView icon;
         }
     }
 }

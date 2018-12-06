@@ -17,7 +17,7 @@
 */
 -->
 <com.amoseui.music.utils.CheckableRelativeLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="64dip"
     android:gravity="center_vertical"
@@ -27,53 +27,58 @@
         android:id="@+id/radio"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
         android:layout_alignParentLeft="true"
         android:layout_centerVertical="true"
+        android:layout_gravity="center_vertical"
         android:layout_marginLeft="4dip"
-        android:focusable="false"
-        android:clickable="false" />
+        android:clickable="false"
+        android:focusable="false"/>
 
-    <TextView android:id="@+id/duration"
-        android:layout_alignParentRight="true"
+    <TextView
+        android:id="@+id/duration"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignBaseline="@+id/line1"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:textColor="#ffe0d090"
+        android:layout_alignParentRight="true"
         android:paddingLeft="4dip"
         android:paddingRight="5dip"
-        android:singleLine="true" />
+        android:singleLine="true"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textColor="#ffe0d090"/>
 
-    <TextView android:id="@+id/line1"
-        android:textAppearance="?android:attr/textAppearanceMedium"
+    <TextView
+        android:id="@+id/line1"
         android:layout_width="wrap_content"
-        android:paddingLeft="4dip"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
         android:layout_alignWithParentIfMissing="true"
-        android:layout_toRightOf="@id/radio"
+        android:layout_alignParentTop="true"
         android:layout_toLeftOf="@id/duration"
+        android:layout_toRightOf="@id/radio"
         android:ellipsize="end"
-        android:singleLine="true" />
+        android:paddingLeft="4dip"
+        android:singleLine="true"
+        android:textAppearance="?android:attr/textAppearanceMedium"/>
 
-    <TextView android:id="@+id/line2" android:visibility="visible"
-        android:maxLines="2"
+    <TextView
+        android:id="@+id/line2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignWithParentIfMissing="true"
+        android:layout_below="@id/line1"
+        android:layout_toLeftOf="@id/duration"
+        android:layout_toRightOf="@id/radio"
         android:ellipsize="end"
+        android:maxLines="2"
         android:paddingLeft="4dip"
         android:textAppearance="?android:attr/textAppearanceSmall"
-        android:layout_below="@id/line1"
-        android:layout_alignWithParentIfMissing="true"
-        android:layout_toRightOf="@id/radio"
-        android:layout_toLeftOf="@id/duration"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:visibility="visible"/>
 
-    <ImageView android:id="@+id/play_indicator"
-        android:layout_alignParentRight="true"
-        android:layout_alignBottom="@id/line2"
+    <ImageView
+        android:id="@+id/play_indicator"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginRight="6dip" />
-        
+        android:layout_alignBottom="@id/line2"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="6dip"/>
+
 </com.amoseui.music.utils.CheckableRelativeLayout>

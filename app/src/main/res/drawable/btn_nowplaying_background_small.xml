@@ -15,7 +15,7 @@
 -->
 
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_pressed="true" android:drawable="@drawable/btn_playback_small_pressed" />
-    <item android:state_focused="true" android:state_enabled="true" android:drawable="@drawable/btn_playback_small_selected" />
-    <item android:drawable="@drawable/btn_playback_small_normal" />
+    <item android:drawable="@drawable/btn_playback_small_pressed" android:state_pressed="true"/>
+    <item android:drawable="@drawable/btn_playback_small_selected" android:state_enabled="true" android:state_focused="true"/>
+    <item android:drawable="@drawable/btn_playback_small_normal"/>
 </selector>

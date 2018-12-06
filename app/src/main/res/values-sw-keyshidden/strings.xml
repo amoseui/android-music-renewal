@@ -17,9 +17,6 @@
 */
  -->
 
-<resources xmlns:android="http://schemas.android.com/apk/res/android"
+<resources
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="create_playlist_create_text_prompt" msgid="2379436619128383935">"Fungua kibodi ili kupatia orodha ya kucheza jina jipya, au chagua Hifadhi ili kuiita jila la \"<xliff:g id="PLAYLIST">%s</xliff:g>\"."</string>
-    <string name="rename_playlist_same_prompt" msgid="7777541452078260899">"Fungua kibodi ili kupatia orodha ya kucheza \"<xliff:g id="PLAYLIST">%s</xliff:g>\" jina jipya."</string>
-    <string name="rename_playlist_diff_prompt" msgid="900422624897120958">"Fungua kibodi ili kupatia orodha ya kucheza \"<xliff:g id="PLAYLIST">%1$s</xliff:g>\" jina jipya, au chagua Hifadi ili kuipatia jina \"<xliff:g id="NAME">%2$s</xliff:g>\"."</string>
 </resources>

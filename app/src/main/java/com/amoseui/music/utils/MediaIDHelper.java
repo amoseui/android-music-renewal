@@ -22,8 +22,6 @@ import java.util.Arrays;
  * Utility class to help on queue related tasks.
  */
 public class MediaIDHelper {
-    private static final String TAG = "MediaIDHelper";
-
     // Media IDs used on browseable items of MediaBrowser
     public static final String MEDIA_ID_ROOT = "__ROOT__";
     public static final String MEDIA_ID_MUSICS_BY_ARTIST = "__BY_ARTIST__";
@@ -32,7 +30,7 @@ public class MediaIDHelper {
     public static final String MEDIA_ID_MUSICS_BY_PLAYLIST = "__BY_PLAYLIST__";
     public static final String MEDIA_ID_MUSICS_BY_SEARCH = "__BY_SEARCH__";
     public static final String MEDIA_ID_NOW_PLAYING = "__NOW_PLAYING__";
-
+    private static final String TAG = "MediaIDHelper";
     private static final char CATEGORY_SEPARATOR = 31;
     private static final char LEAF_SEPARATOR = 30;
 

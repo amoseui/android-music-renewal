@@ -38,7 +38,6 @@ import android.widget.SimpleExpandableListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.amoseui.music.R;
 import com.amoseui.music.utils.LogHelper;
 import com.amoseui.music.utils.MediaIDHelper;
 
@@ -52,15 +51,108 @@ public class ArtistAlbumBrowserActivity extends ExpandableListActivity {
     private static final String KEY_NUM_ALBUMS = "__NUM_ALBUMS__";
     private static final MediaBrowser.MediaItem DEFAULT_PARENT_ITEM =
             new MediaBrowser.MediaItem(new MediaDescription.Builder()
-                                               .setMediaId(MediaIDHelper.MEDIA_ID_MUSICS_BY_ARTIST)
-                                               .build(),
+                    .setMediaId(MediaIDHelper.MEDIA_ID_MUSICS_BY_ARTIST)
+                    .build(),
                     MediaBrowser.MediaItem.FLAG_BROWSABLE);
 
     private ArtistAlbumListAdapter mAdapter;
     private MediaBrowser mMediaBrowser;
     private MediaBrowser.MediaItem mParentItem;
+    private MediaBrowser
+            .SubscriptionCallback mSubscriptionCallback = new MediaBrowser.SubscriptionCallback() {
+        @Override
+        public void onChildrenLoaded(String parentId, List<MediaBrowser.MediaItem> children) {
+            if (parentId.equals(MediaIDHelper.MEDIA_ID_MUSICS_BY_ARTIST)) {
+                mAdapter.getArtistMap().clear();
+                mAdapter.getGroupData().clear();
+                mAdapter.notifyDataSetInvalidated();
+                for (MediaBrowser.MediaItem item : children) {
+                    ConcurrentHashMap<String, MediaBrowser.MediaItem> entry =
+                            new ConcurrentHashMap<>();
+                    entry.put(MediaIDHelper.MEDIA_ID_MUSICS_BY_ARTIST, item);
+                    synchronized (this) {
+                        mAdapter.getArtistMap().put(item.getDescription().getTitle().toString(),
+                                mAdapter.getGroupData().size());
+                        mAdapter.getGroupData().add(entry);
+                        mAdapter.getChildData().add(new ArrayList<ConcurrentHashMap<String, MediaBrowser.MediaItem>>());
+                    }
+                    mMediaBrowser.subscribe(item.getMediaId(), this);
+                }
+                mAdapter.notifyDataSetChanged();
+            } else if (parentId.startsWith(MediaIDHelper.MEDIA_ID_MUSICS_BY_ARTIST)) {
+                String artist = MediaIDHelper.getHierarchy(parentId)[1];
+                if (!mAdapter.getArtistMap().containsKey(artist)) {
+                    return;
+                }
+                int artistIndex = mAdapter.getArtistMap().get(artist);
+                mAdapter.getChildData().get(artistIndex).clear();
+                mAdapter.notifyDataSetInvalidated();
+                Bundle extras = new Bundle();
+                extras.putLong(KEY_NUM_ALBUMS, children.size());
+                MediaBrowser.MediaItem newArtistItem =
+                        new MediaBrowser.MediaItem(new MediaDescription.Builder()
+                                .setMediaId("Count")
+                                .setExtras(extras)
+                                .build(),
+                                0);
+                mAdapter.getGroupData().get(artistIndex).put(KEY_NUM_ALBUMS, newArtistItem);
+                for (MediaBrowser.MediaItem item : children) {
+                    ConcurrentHashMap<String, MediaBrowser.MediaItem> entry =
+                            new ConcurrentHashMap<>();
+                    entry.put(MediaIDHelper.MEDIA_ID_MUSICS_BY_ALBUM, item);
+                    mAdapter.getChildData().get(artistIndex).add(entry);
+                }
+                mAdapter.notifyDataSetChanged();
+            }
+        }
 
-    /** Called when the activity is first created. */
+        @Override
+        public void onError(String id) {
+            Toast.makeText(getApplicationContext(), R.string.error_loading_media, Toast.LENGTH_LONG)
+                    .show();
+        }
+    };
+    private MediaController.Callback mMediaControllerCallback = new MediaController.Callback() {
+        @Override
+        public void onMetadataChanged(MediaMetadata metadata) {
+            super.onMetadataChanged(metadata);
+            MusicUtils.updateNowPlaying(ArtistAlbumBrowserActivity.this);
+        }
+    };
+    private MediaBrowser.ConnectionCallback mConnectionCallback =
+            new MediaBrowser.ConnectionCallback() {
+                @Override
+                public void onConnected() {
+                    LogHelper.d(
+                            TAG, "onConnected: session token ", mMediaBrowser.getSessionToken());
+                    mMediaBrowser.subscribe(mParentItem.getMediaId(), mSubscriptionCallback);
+                    if (mMediaBrowser.getSessionToken() == null) {
+                        throw new IllegalArgumentException("No Session token");
+                    }
+                    MediaController mediaController = new MediaController(
+                            ArtistAlbumBrowserActivity.this, mMediaBrowser.getSessionToken());
+                    mediaController.registerCallback(mMediaControllerCallback);
+                    ArtistAlbumBrowserActivity.this.setMediaController(mediaController);
+                    if (mediaController.getMetadata() != null) {
+                        MusicUtils.updateNowPlaying(ArtistAlbumBrowserActivity.this);
+                    }
+                }
+
+                @Override
+                public void onConnectionFailed() {
+                    LogHelper.d(TAG, "onConnectionFailed");
+                }
+
+                @Override
+                public void onConnectionSuspended() {
+                    LogHelper.d(TAG, "onConnectionSuspended");
+                    ArtistAlbumBrowserActivity.this.setMediaController(null);
+                }
+            };
+
+    /**
+     * Called when the activity is first created.
+     */
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
@@ -132,123 +224,36 @@ public class ArtistAlbumBrowserActivity extends ExpandableListActivity {
         mMediaBrowser.disconnect();
     }
 
-    private MediaBrowser
-            .SubscriptionCallback mSubscriptionCallback = new MediaBrowser.SubscriptionCallback() {
-        @Override
-        public void onChildrenLoaded(String parentId, List<MediaBrowser.MediaItem> children) {
-            if (parentId.equals(MediaIDHelper.MEDIA_ID_MUSICS_BY_ARTIST)) {
-                mAdapter.getArtistMap().clear();
-                mAdapter.getGroupData().clear();
-                mAdapter.notifyDataSetInvalidated();
-                for (MediaBrowser.MediaItem item : children) {
-                    ConcurrentHashMap<String, MediaBrowser.MediaItem> entry =
-                            new ConcurrentHashMap<>();
-                    entry.put(MediaIDHelper.MEDIA_ID_MUSICS_BY_ARTIST, item);
-                    synchronized (this) {
-                        mAdapter.getArtistMap().put(item.getDescription().getTitle().toString(),
-                                mAdapter.getGroupData().size());
-                        mAdapter.getGroupData().add(entry);
-                        mAdapter.getChildData().add(new ArrayList<ConcurrentHashMap<String, MediaBrowser.MediaItem>>());
-                    }
-                    mMediaBrowser.subscribe(item.getMediaId(), this);
-                }
-                mAdapter.notifyDataSetChanged();
-            } else if (parentId.startsWith(MediaIDHelper.MEDIA_ID_MUSICS_BY_ARTIST)) {
-                String artist = MediaIDHelper.getHierarchy(parentId)[1];
-                if (!mAdapter.getArtistMap().containsKey(artist)) {
-                    return;
-                }
-                int artistIndex = mAdapter.getArtistMap().get(artist);
-                mAdapter.getChildData().get(artistIndex).clear();
-                mAdapter.notifyDataSetInvalidated();
-                Bundle extras = new Bundle();
-                extras.putLong(KEY_NUM_ALBUMS, children.size());
-                MediaBrowser.MediaItem newArtistItem =
-                        new MediaBrowser.MediaItem(new MediaDescription.Builder()
-                                                           .setMediaId("Count")
-                                                           .setExtras(extras)
-                                                           .build(),
-                                0);
-                mAdapter.getGroupData().get(artistIndex).put(KEY_NUM_ALBUMS, newArtistItem);
-                for (MediaBrowser.MediaItem item : children) {
-                    ConcurrentHashMap<String, MediaBrowser.MediaItem> entry =
-                            new ConcurrentHashMap<>();
-                    entry.put(MediaIDHelper.MEDIA_ID_MUSICS_BY_ALBUM, item);
-                    mAdapter.getChildData().get(artistIndex).add(entry);
-                }
-                mAdapter.notifyDataSetChanged();
-            }
-        }
-
-        @Override
-        public void onError(String id) {
-            Toast.makeText(getApplicationContext(), R.string.error_loading_media, Toast.LENGTH_LONG)
-                    .show();
-        }
-    };
-
-    private MediaBrowser.ConnectionCallback mConnectionCallback =
-            new MediaBrowser.ConnectionCallback() {
-                @Override
-                public void onConnected() {
-                    LogHelper.d(
-                            TAG, "onConnected: session token ", mMediaBrowser.getSessionToken());
-                    mMediaBrowser.subscribe(mParentItem.getMediaId(), mSubscriptionCallback);
-                    if (mMediaBrowser.getSessionToken() == null) {
-                        throw new IllegalArgumentException("No Session token");
-                    }
-                    MediaController mediaController = new MediaController(
-                            ArtistAlbumBrowserActivity.this, mMediaBrowser.getSessionToken());
-                    mediaController.registerCallback(mMediaControllerCallback);
-                    ArtistAlbumBrowserActivity.this.setMediaController(mediaController);
-                    if (mediaController.getMetadata() != null) {
-                        MusicUtils.updateNowPlaying(ArtistAlbumBrowserActivity.this);
-                    }
-                }
-
-                @Override
-                public void onConnectionFailed() {
-                    LogHelper.d(TAG, "onConnectionFailed");
-                }
-
-                @Override
-                public void onConnectionSuspended() {
-                    LogHelper.d(TAG, "onConnectionSuspended");
-                    ArtistAlbumBrowserActivity.this.setMediaController(null);
-                }
-            };
-
-    private MediaController.Callback mMediaControllerCallback = new MediaController.Callback() {
-        @Override
-        public void onMetadataChanged(MediaMetadata metadata) {
-            super.onMetadataChanged(metadata);
-            MusicUtils.updateNowPlaying(ArtistAlbumBrowserActivity.this);
-        }
-    };
+    @Override
+    public boolean onChildClick(
+            ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
+        Map<String, MediaBrowser.MediaItem> albumEntry =
+                (Map<String, MediaBrowser.MediaItem>) mAdapter.getChild(
+                        groupPosition, childPosition);
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        intent.setDataAndType(Uri.EMPTY, "vnd.android.cursor.dir/track");
+        intent.putExtra(
+                MusicUtils.TAG_PARENT_ITEM, albumEntry.get(MediaIDHelper.MEDIA_ID_MUSICS_BY_ALBUM));
+        startActivity(intent);
+        return true;
+    }
 
     private class ArtistAlbumListAdapter extends SimpleExpandableListAdapter {
         private final Drawable mNowPlayingOverlay;
         private final BitmapDrawable mDefaultAlbumIcon;
         private ArtistAlbumBrowserActivity mActivity;
         private ArrayList<ConcurrentHashMap<String, MediaBrowser.MediaItem>> mGroupData;
-        private ArrayList < ArrayList
-                < ConcurrentHashMap<String, MediaBrowser.MediaItem>>> mChildData;
+        private ArrayList<ArrayList
+                <ConcurrentHashMap<String, MediaBrowser.MediaItem>>> mChildData;
         private ConcurrentHashMap<String, Integer> mArtistMap;
 
-        private class ViewHolder {
-            TextView line1;
-            TextView line2;
-            ImageView play_indicator;
-            ImageView icon;
-        }
-
         ArtistAlbumListAdapter(ArtistAlbumBrowserActivity currentActivity,
-                ArrayList<ConcurrentHashMap<String, MediaBrowser.MediaItem>> groupData,
-                ArrayList < ArrayList
-                        < ConcurrentHashMap<String, MediaBrowser.MediaItem>>> childData) {
-            super(currentActivity, groupData, R.layout.track_list_item_group, new String[] {},
-                    new int[] {}, childData, R.layout.track_list_item_child, new String[] {},
-                    new int[] {});
+                               ArrayList<ConcurrentHashMap<String, MediaBrowser.MediaItem>> groupData,
+                               ArrayList<ArrayList
+                                       <ConcurrentHashMap<String, MediaBrowser.MediaItem>>> childData) {
+            super(currentActivity, groupData, R.layout.track_list_item_group, new String[]{},
+                    new int[]{}, childData, R.layout.track_list_item_child, new String[]{},
+                    new int[]{});
             mGroupData = groupData;
             mChildData = childData;
             mActivity = currentActivity;
@@ -266,8 +271,8 @@ public class ArtistAlbumBrowserActivity extends ExpandableListActivity {
             return mGroupData;
         }
 
-        public ArrayList < ArrayList
-                < ConcurrentHashMap<String, MediaBrowser.MediaItem>>> getChildData() {
+        public ArrayList<ArrayList
+                <ConcurrentHashMap<String, MediaBrowser.MediaItem>>> getChildData() {
             return mChildData;
         }
 
@@ -343,7 +348,7 @@ public class ArtistAlbumBrowserActivity extends ExpandableListActivity {
                 return convertView;
             }
             if (metadata.getString(MediaMetadata.METADATA_KEY_ARTIST)
-                            .equals(artistItem.getDescription().getTitle())
+                    .equals(artistItem.getDescription().getTitle())
                     && !isExpanded) {
                 vh.play_indicator.setImageDrawable(mNowPlayingOverlay);
             } else {
@@ -354,7 +359,7 @@ public class ArtistAlbumBrowserActivity extends ExpandableListActivity {
 
         @Override
         public View getChildView(int groupPosition, int childPosition, boolean isLastChild,
-                View convertView, ViewGroup parent) {
+                                 View convertView, ViewGroup parent) {
             if (convertView == null) {
                 convertView = newChildView(isLastChild, parent);
             }
@@ -382,26 +387,19 @@ public class ArtistAlbumBrowserActivity extends ExpandableListActivity {
                 return convertView;
             }
             if (albumItem.getDescription().getTitle().equals(
-                        metadata.getString(MediaMetadata.METADATA_KEY_ALBUM))) {
+                    metadata.getString(MediaMetadata.METADATA_KEY_ALBUM))) {
                 vh.play_indicator.setImageDrawable(mNowPlayingOverlay);
             } else {
                 vh.play_indicator.setImageDrawable(null);
             }
             return convertView;
         }
-    }
 
-    @Override
-    public boolean onChildClick(
-            ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
-        Map<String, MediaBrowser.MediaItem> albumEntry =
-                (Map<String, MediaBrowser.MediaItem>) mAdapter.getChild(
-                        groupPosition, childPosition);
-        Intent intent = new Intent(Intent.ACTION_PICK);
-        intent.setDataAndType(Uri.EMPTY, "vnd.android.cursor.dir/track");
-        intent.putExtra(
-                MusicUtils.TAG_PARENT_ITEM, albumEntry.get(MediaIDHelper.MEDIA_ID_MUSICS_BY_ALBUM));
-        startActivity(intent);
-        return true;
+        private class ViewHolder {
+            TextView line1;
+            TextView line2;
+            ImageView play_indicator;
+            ImageView icon;
+        }
     }
 }

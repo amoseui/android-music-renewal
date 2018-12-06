@@ -27,9 +27,8 @@ import android.widget.RelativeLayout;
  * also supports checking.  Otherwise, it works identically to a RelativeLayout.
  */
 public class CheckableRelativeLayout extends RelativeLayout implements Checkable {
-    private boolean mChecked;
-
     private static final int[] CHECKED_STATE_SET = {android.R.attr.state_checked};
+    private boolean mChecked;
 
     public CheckableRelativeLayout(Context context, AttributeSet attrs) {
         super(context, attrs);

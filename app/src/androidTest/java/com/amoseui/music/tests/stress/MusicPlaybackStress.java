@@ -19,12 +19,11 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Instrumentation;
 import android.app.Instrumentation.ActivityMonitor;
+import android.content.Context;
 import android.test.ActivityInstrumentationTestCase;
 import android.test.suitebuilder.annotation.LargeTest;
-import android.view.KeyEvent;
 import android.util.Log;
-import android.content.Context;
-
+import android.view.KeyEvent;
 
 import com.amoseui.music.TrackBrowserActivity;
 import com.amoseui.music.tests.MusicPlayerNames;

@@ -23,8 +23,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.media.AudioManager.OnAudioFocusChangeListener;
+import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.media.MediaPlayer.OnErrorListener;
 import android.media.MediaPlayer.OnPreparedListener;
@@ -43,11 +43,9 @@ import android.view.Window;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
-import android.widget.TextView;
 import android.widget.SeekBar.OnSeekBarChangeListener;
+import android.widget.TextView;
 import android.widget.Toast;
-
-import com.amoseui.music.R;
 
 import java.io.IOException;
 
@@ -57,6 +55,7 @@ import java.io.IOException;
 public class AudioPreview
         extends Activity implements OnPreparedListener, OnErrorListener, OnCompletionListener {
     private final static String TAG = "AudioPreview";
+    private static final int OPEN_IN_MUSIC = 1;
     private PreviewPlayer mPlayer;
     private TextView mTextLine1;
     private TextView mTextLine2;
@@ -68,9 +67,58 @@ public class AudioPreview
     private int mDuration;
     private Uri mUri;
     private long mMediaId = -1;
-    private static final int OPEN_IN_MUSIC = 1;
     private AudioManager mAudioManager;
     private boolean mPausedByTransientLossOfFocus;
+    private OnAudioFocusChangeListener mAudioFocusListener = new OnAudioFocusChangeListener() {
+        public void onAudioFocusChange(int focusChange) {
+            if (mPlayer == null) {
+                // this activity has handed its MediaPlayer off to the next activity
+                // (e.g. portrait/landscape switch) and should abandon its focus
+                mAudioManager.abandonAudioFocus(this);
+                return;
+            }
+            switch (focusChange) {
+                case AudioManager.AUDIOFOCUS_LOSS:
+                    mPausedByTransientLossOfFocus = false;
+                    mPlayer.pause();
+                    break;
+                case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+                    if (mPlayer.isPlaying()) {
+                        mPausedByTransientLossOfFocus = true;
+                        mPlayer.pause();
+                    }
+                    break;
+                case AudioManager.AUDIOFOCUS_GAIN:
+                    if (mPausedByTransientLossOfFocus) {
+                        mPausedByTransientLossOfFocus = false;
+                        start();
+                    }
+                    break;
+            }
+            updatePlayPause();
+        }
+    };
+    private OnSeekBarChangeListener mSeekListener = new OnSeekBarChangeListener() {
+        public void onStartTrackingTouch(SeekBar bar) {
+            mSeeking = true;
+        }
+
+        public void onProgressChanged(SeekBar bar, int progress, boolean fromuser) {
+            if (!fromuser) {
+                return;
+            }
+            // Protection for case of simultaneously tapping on seek bar and exit
+            if (mPlayer == null) {
+                return;
+            }
+            mPlayer.seekTo(progress);
+        }
+
+        public void onStopTrackingTouch(SeekBar bar) {
+            mSeeking = false;
+        }
+    };
 
     @Override
     public void onCreate(Bundle icicle) {
@@ -169,7 +217,7 @@ public class AudioPreview
             if (mUri.getAuthority() == MediaStore.AUTHORITY) {
                 // try to get title and artist from the media content provider
                 mAsyncQueryHandler.startQuery(0, null, mUri,
-                        new String[] {MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.ARTIST},
+                        new String[]{MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.ARTIST},
                         null, null, null);
             } else {
                 // Try to get the display name from another content provider.
@@ -182,9 +230,9 @@ public class AudioPreview
             // in the download manager might follow this path
             String path = mUri.getPath();
             mAsyncQueryHandler.startQuery(0, null, MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                    new String[] {MediaStore.Audio.Media._ID, MediaStore.Audio.Media.TITLE,
+                    new String[]{MediaStore.Audio.Media._ID, MediaStore.Audio.Media.TITLE,
                             MediaStore.Audio.Media.ARTIST},
-                    MediaStore.Audio.Media.DATA + "=?", new String[] {path}, null);
+                    MediaStore.Audio.Media.DATA + "=?", new String[]{path}, null);
         } else {
             // We can't get metadata from the file/stream itself yet, because
             // that API is hidden, so instead we display the URI being played
@@ -275,37 +323,6 @@ public class AudioPreview
         updatePlayPause();
     }
 
-    private OnAudioFocusChangeListener mAudioFocusListener = new OnAudioFocusChangeListener() {
-        public void onAudioFocusChange(int focusChange) {
-            if (mPlayer == null) {
-                // this activity has handed its MediaPlayer off to the next activity
-                // (e.g. portrait/landscape switch) and should abandon its focus
-                mAudioManager.abandonAudioFocus(this);
-                return;
-            }
-            switch (focusChange) {
-                case AudioManager.AUDIOFOCUS_LOSS:
-                    mPausedByTransientLossOfFocus = false;
-                    mPlayer.pause();
-                    break;
-                case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-                case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
-                    if (mPlayer.isPlaying()) {
-                        mPausedByTransientLossOfFocus = true;
-                        mPlayer.pause();
-                    }
-                    break;
-                case AudioManager.AUDIOFOCUS_GAIN:
-                    if (mPausedByTransientLossOfFocus) {
-                        mPausedByTransientLossOfFocus = false;
-                        start();
-                    }
-                    break;
-            }
-            updatePlayPause();
-        }
-    };
-
     private void start() {
         mAudioManager.requestAudioFocus(mAudioFocusListener, AudioManager.STREAM_MUSIC,
                 AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
@@ -324,19 +341,6 @@ public class AudioPreview
         }
     }
 
-    class ProgressRefresher implements Runnable {
-        @Override
-        public void run() {
-            if (mPlayer != null && !mSeeking && mDuration != 0) {
-                mSeekBar.setProgress(mPlayer.getCurrentPosition());
-            }
-            mProgressRefresher.removeCallbacksAndMessages(null);
-            if (!mUiPaused) {
-                mProgressRefresher.postDelayed(new ProgressRefresher(), 200);
-            }
-        }
-    }
-
     private void updatePlayPause() {
         ImageButton b = (ImageButton) findViewById(R.id.playpause);
         if (b != null && mPlayer != null) {
@@ -348,25 +352,6 @@ public class AudioPreview
             }
         }
     }
-
-    private OnSeekBarChangeListener mSeekListener = new OnSeekBarChangeListener() {
-        public void onStartTrackingTouch(SeekBar bar) {
-            mSeeking = true;
-        }
-        public void onProgressChanged(SeekBar bar, int progress, boolean fromuser) {
-            if (!fromuser) {
-                return;
-            }
-            // Protection for case of simultaneously tapping on seek bar and exit
-            if (mPlayer == null) {
-                return;
-            }
-            mPlayer.seekTo(progress);
-        }
-        public void onStopTrackingTouch(SeekBar bar) {
-            mSeeking = false;
-        }
-    };
 
     public boolean onError(MediaPlayer mp, int what, int extra) {
         Toast.makeText(this, R.string.playback_failed, Toast.LENGTH_SHORT).show();
@@ -466,8 +451,8 @@ public class AudioPreview
         }
 
         public void setDataSourceAndPrepare(Uri uri) throws IllegalArgumentException,
-                                                            SecurityException,
-                                                            IllegalStateException, IOException {
+                SecurityException,
+                IllegalStateException, IOException {
             setDataSource(mActivity, uri);
             prepareAsync();
         }
@@ -483,6 +468,19 @@ public class AudioPreview
 
         boolean isPrepared() {
             return mIsPrepared;
+        }
+    }
+
+    class ProgressRefresher implements Runnable {
+        @Override
+        public void run() {
+            if (mPlayer != null && !mSeeking && mDuration != 0) {
+                mSeekBar.setProgress(mPlayer.getCurrentPosition());
+            }
+            mProgressRefresher.removeCallbacksAndMessages(null);
+            if (!mUiPaused) {
+                mProgressRefresher.postDelayed(new ProgressRefresher(), 200);
+            }
         }
     }
 }

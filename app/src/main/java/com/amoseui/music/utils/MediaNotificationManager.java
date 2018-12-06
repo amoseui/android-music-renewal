@@ -42,16 +42,13 @@ import com.amoseui.music.R;
  * won't be killed during playback.
  */
 public class MediaNotificationManager extends BroadcastReceiver {
-    private static final String TAG = LogHelper.makeLogTag(MediaNotificationManager.class);
-
-    private static final int NOTIFICATION_ID = 412;
-    private static final int REQUEST_CODE = 100;
-
     public static final String ACTION_PAUSE = "com.amoseui.music.pause";
     public static final String ACTION_PLAY = "com.amoseui.music.play";
     public static final String ACTION_PREV = "com.amoseui.music.prev";
     public static final String ACTION_NEXT = "com.amoseui.music.next";
-
+    private static final String TAG = LogHelper.makeLogTag(MediaNotificationManager.class);
+    private static final int NOTIFICATION_ID = 412;
+    private static final int REQUEST_CODE = 100;
     private final MediaPlaybackService mService;
     private MediaSession.Token mSessionToken;
     private MediaController mController;
@@ -70,6 +67,40 @@ public class MediaNotificationManager extends BroadcastReceiver {
     private int mNotificationColor;
 
     private boolean mStarted = false;
+    private final MediaController.Callback mCb = new MediaController.Callback() {
+        @Override
+        public void onPlaybackStateChanged(PlaybackState state) {
+            mPlaybackState = state;
+            LogHelper.d(TAG, "Received new playback state", state);
+            if (state != null
+                    && (state.getState() == PlaybackState.STATE_STOPPED
+                    || state.getState() == PlaybackState.STATE_NONE)) {
+                stopNotification();
+            } else {
+                Notification notification = createNotification();
+                if (notification != null) {
+                    mNotificationManager.notify(NOTIFICATION_ID, notification);
+                }
+            }
+        }
+
+        @Override
+        public void onMetadataChanged(MediaMetadata metadata) {
+            mMetadata = metadata;
+            LogHelper.d(TAG, "Received new metadata ", metadata);
+            Notification notification = createNotification();
+            if (notification != null) {
+                mNotificationManager.notify(NOTIFICATION_ID, notification);
+            }
+        }
+
+        @Override
+        public void onSessionDestroyed() {
+            super.onSessionDestroyed();
+            LogHelper.d(TAG, "Session was destroyed, resetting to the new session token");
+            updateSessionToken();
+        }
+    };
 
     public MediaNotificationManager(MediaPlaybackService service) {
         mService = service;
@@ -190,41 +221,6 @@ public class MediaNotificationManager extends BroadcastReceiver {
                 mService, REQUEST_CODE, openUI, PendingIntent.FLAG_CANCEL_CURRENT);
     }
 
-    private final MediaController.Callback mCb = new MediaController.Callback() {
-        @Override
-        public void onPlaybackStateChanged(PlaybackState state) {
-            mPlaybackState = state;
-            LogHelper.d(TAG, "Received new playback state", state);
-            if (state != null
-                    && (state.getState() == PlaybackState.STATE_STOPPED
-                               || state.getState() == PlaybackState.STATE_NONE)) {
-                stopNotification();
-            } else {
-                Notification notification = createNotification();
-                if (notification != null) {
-                    mNotificationManager.notify(NOTIFICATION_ID, notification);
-                }
-            }
-        }
-
-        @Override
-        public void onMetadataChanged(MediaMetadata metadata) {
-            mMetadata = metadata;
-            LogHelper.d(TAG, "Received new metadata ", metadata);
-            Notification notification = createNotification();
-            if (notification != null) {
-                mNotificationManager.notify(NOTIFICATION_ID, notification);
-            }
-        }
-
-        @Override
-        public void onSessionDestroyed() {
-            super.onSessionDestroyed();
-            LogHelper.d(TAG, "Session was destroyed, resetting to the new session token");
-            updateSessionToken();
-        }
-    };
-
     private Notification createNotification() {
         LogHelper.d(TAG, "updateNotificationMetadata. mMetadata=" + mMetadata);
         if (mMetadata == null || mPlaybackState == null) {
@@ -274,10 +270,10 @@ public class MediaNotificationManager extends BroadcastReceiver {
 
         notificationBuilder
                 .setStyle(new Notification.MediaStyle()
-                                  .setShowActionsInCompactView(
-                                          playPauseButtonPosition) // show only play/pause in
-                                  // compact view
-                                  .setMediaSession(mSessionToken))
+                        .setShowActionsInCompactView(
+                                playPauseButtonPosition) // show only play/pause in
+                        // compact view
+                        .setMediaSession(mSessionToken))
                 .setColor(mNotificationColor)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setVisibility(Notification.VISIBILITY_PUBLIC)

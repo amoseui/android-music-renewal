@@ -25,6 +25,18 @@ import android.os.Parcelable;
  * without requiring to rebuild the collections the metadata is in.
  */
 public class Song implements Parcelable {
+    public static final Parcelable.Creator<Song> CREATOR = new Parcelable.Creator<Song>() {
+        public Song createFromParcel(Parcel in) {
+            MediaMetadata metadata = in.readParcelable(null);
+            long songId = in.readLong();
+            long sortKey = in.readLong();
+            return new Song(songId, metadata, sortKey);
+        }
+
+        public Song[] newArray(int size) {
+            return new Song[size];
+        }
+    };
     private MediaMetadata mMetadata;
     private long mSongId;
     private long mSortKey;
@@ -40,9 +52,11 @@ public class Song implements Parcelable {
     public long getSongId() {
         return mSongId;
     }
+
     public long getSortKey() {
         return mSortKey;
     }
+
     public void setSortKey(long sortKey) {
         mSortKey = sortKey;
     }
@@ -50,6 +64,7 @@ public class Song implements Parcelable {
     public MediaMetadata getMetadata() {
         return mMetadata;
     }
+
     public void setMetadata(MediaMetadata metadata) {
         mMetadata = metadata;
     }
@@ -84,17 +99,4 @@ public class Song implements Parcelable {
         out.writeLong(mSongId);
         out.writeParcelable(mMetadata, flags);
     }
-
-    public static final Parcelable.Creator<Song> CREATOR = new Parcelable.Creator<Song>() {
-        public Song createFromParcel(Parcel in) {
-            MediaMetadata metadata = in.readParcelable(null);
-            long songId = in.readLong();
-            long sortKey = in.readLong();
-            return new Song(songId, metadata, sortKey);
-        }
-
-        public Song[] newArray(int size) {
-            return new Song[size];
-        }
-    };
 }

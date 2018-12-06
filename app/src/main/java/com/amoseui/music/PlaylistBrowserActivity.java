@@ -18,7 +18,8 @@ package com.amoseui.music;
 
 import android.app.Activity;
 import android.app.ListActivity;
-import android.content.*;
+import android.content.ComponentName;
+import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaDescription;
 import android.media.MediaMetadata;
@@ -31,9 +32,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.widget.*;
+import android.widget.ArrayAdapter;
+import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
 
-import com.amoseui.music.R;
 import com.amoseui.music.utils.LogHelper;
 import com.amoseui.music.utils.MediaIDHelper;
 
@@ -42,19 +46,77 @@ import java.util.List;
 public class PlaylistBrowserActivity
         extends ListActivity implements View.OnCreateContextMenuListener {
     private static final String TAG = LogHelper.makeLogTag(PlaylistBrowserActivity.class);
-    private PlaylistListAdapter mAdapter;
-    boolean mAdapterSent;
     private static final MediaBrowser.MediaItem DEFAULT_PARENT_ITEM = new MediaBrowser.MediaItem(
             new MediaDescription.Builder()
                     .setMediaId(MediaIDHelper.MEDIA_ID_MUSICS_BY_PLAYLIST)
                     .setTitle("Playlists")
                     .build(),
             MediaBrowser.MediaItem.FLAG_BROWSABLE);
-
+    boolean mAdapterSent;
+    private PlaylistListAdapter mAdapter;
     private MediaBrowser mMediaBrowser;
     private MediaBrowser.MediaItem mParentItem;
+    private MediaBrowser.SubscriptionCallback mSubscriptionCallback =
+            new MediaBrowser.SubscriptionCallback() {
 
-    /** Called when the activity is first created. */
+                @Override
+                public void onChildrenLoaded(
+                        String parentId, List<MediaBrowser.MediaItem> children) {
+                    mAdapter.clear();
+                    mAdapter.notifyDataSetInvalidated();
+                    for (MediaBrowser.MediaItem item : children) {
+                        mAdapter.add(item);
+                    }
+                    mAdapter.notifyDataSetChanged();
+                }
+
+                @Override
+                public void onError(String id) {
+                    Toast.makeText(getApplicationContext(), R.string.error_loading_media,
+                            Toast.LENGTH_LONG)
+                            .show();
+                }
+            };
+    private MediaController.Callback mMediaControllerCallback = new MediaController.Callback() {
+        @Override
+        public void onMetadataChanged(MediaMetadata metadata) {
+            super.onMetadataChanged(metadata);
+            MusicUtils.updateNowPlaying(PlaylistBrowserActivity.this);
+        }
+    };
+    private MediaBrowser.ConnectionCallback mConnectionCallback =
+            new MediaBrowser.ConnectionCallback() {
+                @Override
+                public void onConnected() {
+                    Log.d(TAG, "onConnected: session token " + mMediaBrowser.getSessionToken());
+                    mMediaBrowser.subscribe(mParentItem.getMediaId(), mSubscriptionCallback);
+                    if (mMediaBrowser.getSessionToken() == null) {
+                        throw new IllegalArgumentException("No Session token");
+                    }
+                    MediaController mediaController = new MediaController(
+                            PlaylistBrowserActivity.this, mMediaBrowser.getSessionToken());
+                    mediaController.registerCallback(mMediaControllerCallback);
+                    PlaylistBrowserActivity.this.setMediaController(mediaController);
+                    if (mediaController.getMetadata() != null) {
+                        MusicUtils.updateNowPlaying(PlaylistBrowserActivity.this);
+                    }
+                }
+
+                @Override
+                public void onConnectionFailed() {
+                    Log.d(TAG, "onConnectionFailed");
+                }
+
+                @Override
+                public void onConnectionSuspended() {
+                    Log.d(TAG, "onConnectionSuspended");
+                    PlaylistBrowserActivity.this.setMediaController(null);
+                }
+            };
+
+    /**
+     * Called when the activity is first created.
+     */
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
@@ -135,65 +197,14 @@ public class PlaylistBrowserActivity
         mMediaBrowser.disconnect();
     }
 
-    private MediaBrowser.SubscriptionCallback mSubscriptionCallback =
-            new MediaBrowser.SubscriptionCallback() {
-
-                @Override
-                public void onChildrenLoaded(
-                        String parentId, List<MediaBrowser.MediaItem> children) {
-                    mAdapter.clear();
-                    mAdapter.notifyDataSetInvalidated();
-                    for (MediaBrowser.MediaItem item : children) {
-                        mAdapter.add(item);
-                    }
-                    mAdapter.notifyDataSetChanged();
-                }
-
-                @Override
-                public void onError(String id) {
-                    Toast.makeText(getApplicationContext(), R.string.error_loading_media,
-                                 Toast.LENGTH_LONG)
-                            .show();
-                }
-            };
-
-    private MediaBrowser.ConnectionCallback mConnectionCallback =
-            new MediaBrowser.ConnectionCallback() {
-                @Override
-                public void onConnected() {
-                    Log.d(TAG, "onConnected: session token " + mMediaBrowser.getSessionToken());
-                    mMediaBrowser.subscribe(mParentItem.getMediaId(), mSubscriptionCallback);
-                    if (mMediaBrowser.getSessionToken() == null) {
-                        throw new IllegalArgumentException("No Session token");
-                    }
-                    MediaController mediaController = new MediaController(
-                            PlaylistBrowserActivity.this, mMediaBrowser.getSessionToken());
-                    mediaController.registerCallback(mMediaControllerCallback);
-                    PlaylistBrowserActivity.this.setMediaController(mediaController);
-                    if (mediaController.getMetadata() != null) {
-                        MusicUtils.updateNowPlaying(PlaylistBrowserActivity.this);
-                    }
-                }
-
-                @Override
-                public void onConnectionFailed() {
-                    Log.d(TAG, "onConnectionFailed");
-                }
-
-                @Override
-                public void onConnectionSuspended() {
-                    Log.d(TAG, "onConnectionSuspended");
-                    PlaylistBrowserActivity.this.setMediaController(null);
-                }
-            };
-
-    private MediaController.Callback mMediaControllerCallback = new MediaController.Callback() {
-        @Override
-        public void onMetadataChanged(MediaMetadata metadata) {
-            super.onMetadataChanged(metadata);
-            MusicUtils.updateNowPlaying(PlaylistBrowserActivity.this);
-        }
-    };
+    @Override
+    protected void onListItemClick(ListView l, View v, int position, long id) {
+        MediaBrowser.MediaItem item = mAdapter.getItem(position);
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        intent.setDataAndType(Uri.EMPTY, "vnd.android.cursor.dir/track");
+        intent.putExtra(MusicUtils.TAG_PARENT_ITEM, item);
+        startActivity(intent);
+    }
 
     private class PlaylistListAdapter extends ArrayAdapter<MediaBrowser.MediaItem> {
         private int mLayoutId;
@@ -203,13 +214,6 @@ public class PlaylistBrowserActivity
             super(currentactivity, layout);
             mActivity = currentactivity;
             mLayoutId = layout;
-        }
-
-        private class ViewHolder {
-            TextView line1;
-            TextView line2;
-            ImageView icon;
-            ImageView play_indicator;
         }
 
         public void setActivity(PlaylistBrowserActivity newactivity) {
@@ -238,14 +242,12 @@ public class PlaylistBrowserActivity
             p.height = ViewGroup.LayoutParams.WRAP_CONTENT;
             return convertView;
         }
-    }
 
-    @Override
-    protected void onListItemClick(ListView l, View v, int position, long id) {
-        MediaBrowser.MediaItem item = mAdapter.getItem(position);
-        Intent intent = new Intent(Intent.ACTION_PICK);
-        intent.setDataAndType(Uri.EMPTY, "vnd.android.cursor.dir/track");
-        intent.putExtra(MusicUtils.TAG_PARENT_ITEM, item);
-        startActivity(intent);
+        private class ViewHolder {
+            TextView line1;
+            TextView line2;
+            ImageView icon;
+            ImageView play_indicator;
+        }
     }
 }

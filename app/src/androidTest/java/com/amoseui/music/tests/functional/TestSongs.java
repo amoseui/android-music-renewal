@@ -17,23 +17,27 @@
 package com.amoseui.music.tests.functional;
 
 import android.app.Instrumentation;
+import android.content.ContentResolver;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.test.ActivityInstrumentationTestCase;
 import android.test.suitebuilder.annotation.LargeTest;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.net.Uri;
-import android.os.Environment;
-import android.provider.MediaStore;
-import android.content.ContentResolver;
-import android.database.Cursor;
-import android.content.IntentFilter;
 
 import com.amoseui.music.TrackBrowserActivity;
-
 import com.amoseui.music.tests.MusicPlayerNames;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * Junit / Instrumentation test case for the TrackBrowserActivity
@@ -113,7 +117,7 @@ public class TestSongs extends ActivityInstrumentationTestCase<TrackBrowserActiv
         addNewPlaylist();
 
         // Verify the new playlist is created, check the playlist table
-        String[] cols = new String[] {MediaStore.Audio.Playlists.NAME};
+        String[] cols = new String[]{MediaStore.Audio.Playlists.NAME};
         ContentResolver resolver = getActivity().getContentResolver();
         if (resolver == null) {
             System.out.println("resolver = null");

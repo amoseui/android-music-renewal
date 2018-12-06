@@ -15,22 +15,22 @@
 -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center_vertical" >
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:gravity="center_vertical"
+              android:orientation="vertical">
 
-    <include layout="@layout/sd_error" />
+    <include layout="@layout/sd_error"/>
 
-    <include layout="@layout/buttonbar" />
+    <include layout="@layout/buttonbar"/>
 
     <com.amoseui.music.TouchInterceptor
         android:id="@android:id/list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:textSize="18sp"
         android:drawSelectorOnTop="false"
-        android:fastScrollEnabled="true" /> 
+        android:fastScrollEnabled="true"
+        android:textSize="18sp"/>
 
 </LinearLayout>

@@ -27,6 +27,7 @@ import android.net.wifi.WifiManager;
 import android.os.PowerManager;
 import android.text.TextUtils;
 import android.util.Log;
+
 import com.amoseui.music.MediaPlaybackService;
 
 import java.io.IOException;
@@ -41,15 +42,13 @@ import static android.media.session.MediaSession.QueueItem;
  * A class that implements local media playback using {@link android.media.MediaPlayer}
  */
 public class Playback implements AudioManager.OnAudioFocusChangeListener, OnCompletionListener,
-                                 OnErrorListener, OnPreparedListener, OnSeekCompleteListener {
-    private static final String TAG = "Playback";
-
+        OnErrorListener, OnPreparedListener, OnSeekCompleteListener {
     // The volume we set the media player to when we lose audio focus, but are
     // allowed to reduce the volume instead of stopping playback.
     public static final float VOLUME_DUCK = 0.2f;
     // The volume we set the media player when we have audio focus.
     public static final float VOLUME_NORMAL = 1.0f;
-
+    private static final String TAG = "Playback";
     // we don't have audio focus, and can't duck (play at a low volume)
     private static final int AUDIO_NO_FOCUS_NO_DUCK = 0;
     // we don't have focus, but can duck (play at a low volume)
@@ -96,10 +95,11 @@ public class Playback implements AudioManager.OnAudioFocusChangeListener, OnComp
         this.mAudioManager = (AudioManager) service.getSystemService(Context.AUDIO_SERVICE);
         // Create the Wifi lock (this does not acquire the lock, this just creates it)
         this.mWifiLock = ((WifiManager) service.getSystemService(Context.WIFI_SERVICE))
-                                 .createWifiLock(WifiManager.WIFI_MODE_FULL, "sample_lock");
+                .createWifiLock(WifiManager.WIFI_MODE_FULL, "sample_lock");
     }
 
-    public void start() {}
+    public void start() {
+    }
 
     public void stop(boolean notifyListeners) {
         mState = PlaybackState.STATE_STOPPED;
@@ -117,12 +117,12 @@ public class Playback implements AudioManager.OnAudioFocusChangeListener, OnComp
         }
     }
 
-    public void setState(int state) {
-        this.mState = state;
-    }
-
     public int getState() {
         return mState;
+    }
+
+    public void setState(int state) {
+        this.mState = state;
     }
 
     public boolean isConnected() {
@@ -432,7 +432,7 @@ public class Playback implements AudioManager.OnAudioFocusChangeListener, OnComp
      * "foreground service" status, the wake locks and possibly the MediaPlayer.
      *
      * @param releaseMediaPlayer Indicates whether the Media Player should also
-     *            be released or not
+     *                           be released or not
      */
     private void relaxResources(boolean releaseMediaPlayer) {
         Log.d(TAG, "relaxResources. releaseMediaPlayer=" + releaseMediaPlayer);
@@ -471,6 +471,7 @@ public class Playback implements AudioManager.OnAudioFocusChangeListener, OnComp
          * On current music completed.
          */
         void onCompletion();
+
         /**
          * on Playback status changed
          * Implementations can use this callback to update

@@ -41,14 +41,8 @@ public final class AlbumArtCache {
 
     private static final int BIG_BITMAP_INDEX = 0;
     private static final int ICON_BITMAP_INDEX = 1;
-
-    private final LruCache<String, Bitmap[]> mCache;
-
     private static final AlbumArtCache sInstance = new AlbumArtCache();
-
-    public static AlbumArtCache getInstance() {
-        return sInstance;
-    }
+    private final LruCache<String, Bitmap[]> mCache;
 
     private AlbumArtCache() {
         // Holds no more than MAX_ALBUM_ART_CACHE_SIZE bytes, bounded by maxmemory/4 and
@@ -62,6 +56,10 @@ public final class AlbumArtCache {
                         + value[ICON_BITMAP_INDEX].getByteCount();
             }
         };
+    }
+
+    public static AlbumArtCache getInstance() {
+        return sInstance;
     }
 
     public Bitmap getBigImage(String artUrl) {
@@ -96,7 +94,7 @@ public final class AlbumArtCache {
                             artUrl, MAX_ART_WIDTH, MAX_ART_HEIGHT);
                     Bitmap icon = BitmapHelper.scaleBitmap(
                             bitmap, MAX_ART_WIDTH_ICON, MAX_ART_HEIGHT_ICON);
-                    bitmaps = new Bitmap[] {bitmap, icon};
+                    bitmaps = new Bitmap[]{bitmap, icon};
                     mCache.put(artUrl, bitmaps);
                 } catch (IOException e) {
                     return null;
@@ -121,6 +119,7 @@ public final class AlbumArtCache {
 
     public static abstract class FetchListener {
         public abstract void onFetched(String artUrl, Bitmap bigImage, Bitmap iconImage);
+
         public void onError(String artUrl, Exception e) {
             LogHelper.e(TAG, e, "AlbumArtFetchListener: error while downloading " + artUrl);
         }

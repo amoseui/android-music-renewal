@@ -17,9 +17,6 @@
 */
  -->
 
-<resources xmlns:android="http://schemas.android.com/apk/res/android"
+<resources
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="create_playlist_create_text_prompt" msgid="2379436619128383935">"Активирајте тастатуру да бисте новој плејлисти дали име или изаберите „Сачувај“ да бисте јој дали име „<xliff:g id="PLAYLIST">%s</xliff:g>“."</string>
-    <string name="rename_playlist_same_prompt" msgid="7777541452078260899">"Активирајте тастатуру да бисте плејлисти „<xliff:g id="PLAYLIST">%s</xliff:g>“ дали ново име."</string>
-    <string name="rename_playlist_diff_prompt" msgid="900422624897120958">"Активирајте тастатуру да бисте плејлисти „<xliff:g id="PLAYLIST">%1$s</xliff:g>“ дали ново име или изаберите „Сачувај“ да бисте јој дали име „<xliff:g id="NAME">%2$s</xliff:g>“."</string>
 </resources>

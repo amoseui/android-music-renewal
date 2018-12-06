@@ -23,7 +23,7 @@ import android.os.Bundle;
  * Instrumentation class for Media Player launch performance testing.
  */
 public class MusicPlayerLaunchPerformance extends LaunchPerformanceBase {
- 
+
     public static final String LOG_TAG = "MusicPlayerLaunchPerformance";
 
     public MusicPlayerLaunchPerformance() {

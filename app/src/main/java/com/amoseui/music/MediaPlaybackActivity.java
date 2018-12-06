@@ -51,7 +51,6 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.amoseui.music.R;
 import com.amoseui.music.utils.LogHelper;
 import com.amoseui.music.utils.MediaIDHelper;
 import com.amoseui.music.utils.MusicProvider;
@@ -62,7 +61,27 @@ This is the Now Playing Activity
 public class MediaPlaybackActivity
         extends Activity implements View.OnTouchListener, View.OnLongClickListener {
     private static final String TAG = LogHelper.makeLogTag(MediaPlaybackActivity.class);
-
+    private final Handler mHandler = new Handler();
+    int mInitialX = -1;
+    int mLastX = -1;
+    int mTextWidth = 0;
+    int mViewWidth = 0;
+    boolean mDraggingLabel = false;
+    Handler mLabelScroller = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            TextView tv = (TextView) msg.obj;
+            int x = tv.getScrollX();
+            x = x * 3 / 4;
+            tv.scrollTo(x, 0);
+            if (x == 0) {
+                tv.setEllipsize(TruncateAt.END);
+            } else {
+                Message newmsg = obtainMessage(0, tv);
+                mLabelScroller.sendMessageDelayed(newmsg, 15);
+            }
+        }
+    };
     private long mStartSeekPos = 0;
     private long mLastSeekEventTime;
     private RepeatingImageButton mPrevButton;
@@ -72,7 +91,6 @@ public class MediaPlaybackActivity
     private ImageButton mShuffleButton;
     private ImageButton mQueueButton;
     private int mTouchSlop;
-
     private ImageView mAlbumArt;
     private TextView mCurrentTime;
     private TextView mTotalTime;
@@ -83,11 +101,79 @@ public class MediaPlaybackActivity
     private ProgressBar mProgress;
     private BitmapDrawable mDefaultAlbumArt;
     private Toast mToast;
-
     private MediaBrowser mMediaBrowser;
-    private final Handler mHandler = new Handler();
+    // Receive callbacks from the MediaController. Here we update our state such as which queue
+    // is being shown, the current title and description and the PlaybackState.
+    private MediaController.Callback mMediaControllerCallback = new MediaController.Callback() {
 
-    /** Called when the activity is first created. */
+        @Override
+        public void onSessionDestroyed() {
+            LogHelper.d(TAG, "Session destroyed. Need to fetch a new Media Session");
+        }
+
+        @Override
+        public void onPlaybackStateChanged(PlaybackState state) {
+            if (state == null) {
+                return;
+            }
+            LogHelper.d(TAG, "Received playback state change to state ", state.toString());
+            updateProgressBar();
+            setPauseButtonImage();
+        }
+
+        @Override
+        public void onMetadataChanged(MediaMetadata metadata) {
+            if (metadata == null) {
+                return;
+            }
+            LogHelper.d(TAG, "Received updated metadata: ", metadata);
+            updateTrackInfo();
+        }
+    };
+    private MediaBrowser.ConnectionCallback mConnectionCallback =
+            new MediaBrowser.ConnectionCallback() {
+                @Override
+                public void onConnected() {
+                    Log.d(TAG, "onConnected: session token " + mMediaBrowser.getSessionToken());
+                    if (mMediaBrowser.getSessionToken() == null) {
+                        throw new IllegalArgumentException("No Session token");
+                    }
+                    MediaController mediaController = new MediaController(
+                            MediaPlaybackActivity.this, mMediaBrowser.getSessionToken());
+                    mediaController.registerCallback(mMediaControllerCallback);
+                    MediaPlaybackActivity.this.setMediaController(mediaController);
+                    mRepeatButton.setVisibility(View.VISIBLE);
+                    mShuffleButton.setVisibility(View.VISIBLE);
+                    mQueueButton.setVisibility(View.VISIBLE);
+                    setRepeatButtonImage(null);
+                    setShuffleButtonImage(null);
+                    setPauseButtonImage();
+                    updateTrackInfo();
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            long delay = updateProgressBar();
+                            mHandler.postDelayed(this, delay);
+                        }
+                    });
+                }
+
+                @Override
+                public void onConnectionFailed() {
+                    Log.d(TAG, "onConnectionFailed");
+                }
+
+                @Override
+                public void onConnectionSuspended() {
+                    Log.d(TAG, "onConnectionSuspended");
+                    mHandler.removeCallbacksAndMessages(null);
+                    MediaPlaybackActivity.this.setMediaController(null);
+                }
+            };
+
+    /**
+     * Called when the activity is first created.
+     */
     @Override
     public void onCreate(Bundle icicle) {
         LogHelper.d(TAG, "onCreate()");
@@ -180,9 +266,9 @@ public class MediaPlaybackActivity
                                 .build(),
                         MediaBrowser.MediaItem.FLAG_BROWSABLE);
                 Intent intent = new Intent(Intent.ACTION_PICK)
-                                        .setDataAndType(Uri.EMPTY, "vnd.android.cursor.dir/track")
-                                        .putExtra(MusicUtils.TAG_WITH_TABS, false)
-                                        .putExtra(MusicUtils.TAG_PARENT_ITEM, parentItem);
+                        .setDataAndType(Uri.EMPTY, "vnd.android.cursor.dir/track")
+                        .putExtra(MusicUtils.TAG_WITH_TABS, false)
+                        .putExtra(MusicUtils.TAG_PARENT_ITEM, parentItem);
                 startActivity(intent);
             }
         });
@@ -249,10 +335,12 @@ public class MediaPlaybackActivity
             SeekBar seeker = (SeekBar) mProgress;
             seeker.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
                 boolean mmFromTouch = false;
+
                 public void onStartTrackingTouch(SeekBar bar) {
                     mLastSeekEventTime = 0;
                     mmFromTouch = true;
                 }
+
                 public void onProgressChanged(SeekBar bar, int progress, boolean fromuser) {
                     if (!fromuser || (getMediaController() == null)) return;
                     long now = SystemClock.elapsedRealtime();
@@ -268,6 +356,7 @@ public class MediaPlaybackActivity
                         }
                     }
                 }
+
                 public void onStopTrackingTouch(SeekBar bar) {
                     mmFromTouch = false;
                 }
@@ -283,82 +372,6 @@ public class MediaPlaybackActivity
         mMediaBrowser = new MediaBrowser(this, new ComponentName(this, MediaPlaybackService.class),
                 mConnectionCallback, null);
     }
-
-    // Receive callbacks from the MediaController. Here we update our state such as which queue
-    // is being shown, the current title and description and the PlaybackState.
-    private MediaController.Callback mMediaControllerCallback = new MediaController.Callback() {
-
-        @Override
-        public void onSessionDestroyed() {
-            LogHelper.d(TAG, "Session destroyed. Need to fetch a new Media Session");
-        }
-
-        @Override
-        public void onPlaybackStateChanged(PlaybackState state) {
-            if (state == null) {
-                return;
-            }
-            LogHelper.d(TAG, "Received playback state change to state ", state.toString());
-            updateProgressBar();
-            setPauseButtonImage();
-        }
-
-        @Override
-        public void onMetadataChanged(MediaMetadata metadata) {
-            if (metadata == null) {
-                return;
-            }
-            LogHelper.d(TAG, "Received updated metadata: ", metadata);
-            updateTrackInfo();
-        }
-    };
-
-    private MediaBrowser.ConnectionCallback mConnectionCallback =
-            new MediaBrowser.ConnectionCallback() {
-                @Override
-                public void onConnected() {
-                    Log.d(TAG, "onConnected: session token " + mMediaBrowser.getSessionToken());
-                    if (mMediaBrowser.getSessionToken() == null) {
-                        throw new IllegalArgumentException("No Session token");
-                    }
-                    MediaController mediaController = new MediaController(
-                            MediaPlaybackActivity.this, mMediaBrowser.getSessionToken());
-                    mediaController.registerCallback(mMediaControllerCallback);
-                    MediaPlaybackActivity.this.setMediaController(mediaController);
-                    mRepeatButton.setVisibility(View.VISIBLE);
-                    mShuffleButton.setVisibility(View.VISIBLE);
-                    mQueueButton.setVisibility(View.VISIBLE);
-                    setRepeatButtonImage(null);
-                    setShuffleButtonImage(null);
-                    setPauseButtonImage();
-                    updateTrackInfo();
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            long delay = updateProgressBar();
-                            mHandler.postDelayed(this, delay);
-                        }
-                    });
-                }
-
-                @Override
-                public void onConnectionFailed() {
-                    Log.d(TAG, "onConnectionFailed");
-                }
-
-                @Override
-                public void onConnectionSuspended() {
-                    Log.d(TAG, "onConnectionSuspended");
-                    mHandler.removeCallbacksAndMessages(null);
-                    MediaPlaybackActivity.this.setMediaController(null);
-                }
-            };
-
-    int mInitialX = -1;
-    int mLastX = -1;
-    int mTextWidth = 0;
-    int mViewWidth = 0;
-    boolean mDraggingLabel = false;
 
     TextView textViewForContainer(View v) {
         View vv = v.findViewById(R.id.artistname);
@@ -441,22 +454,6 @@ public class MediaPlaybackActivity
         }
         return false;
     }
-
-    Handler mLabelScroller = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            TextView tv = (TextView) msg.obj;
-            int x = tv.getScrollX();
-            x = x * 3 / 4;
-            tv.scrollTo(x, 0);
-            if (x == 0) {
-                tv.setEllipsize(TruncateAt.END);
-            } else {
-                Message newmsg = obtainMessage(0, tv);
-                mLabelScroller.sendMessageDelayed(newmsg, 15);
-            }
-        }
-    };
 
     public boolean onLongClick(View view) {
         CharSequence title = null;
@@ -637,7 +634,7 @@ public class MediaPlaybackActivity
         if (extras == null) return;
         if (shuffleMode == null) {
             shuffleMode = MediaPlaybackService.ShuffleMode
-                                  .values()[extras.getInt(MediaPlaybackService.SHUFFLE_MODE)];
+                    .values()[extras.getInt(MediaPlaybackService.SHUFFLE_MODE)];
         }
         switch (shuffleMode) {
             case SHUFFLE_RANDOM:
@@ -663,7 +660,7 @@ public class MediaPlaybackActivity
         if (extras == null) return;
         if (repeatMode == null) {
             repeatMode = MediaPlaybackService.RepeatMode
-                                 .values()[extras.getInt(MediaPlaybackService.REPEAT_MODE)];
+                    .values()[extras.getInt(MediaPlaybackService.REPEAT_MODE)];
         }
         switch (repeatMode) {
             case REPEAT_CURRENT:

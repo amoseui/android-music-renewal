@@ -19,16 +19,15 @@ package com.amoseui.music.tests.functional;
 import android.app.Activity;
 import android.app.Instrumentation;
 import android.app.Instrumentation.ActivityMonitor;
+import android.content.ContentResolver;
 import android.content.Intent;
+import android.database.Cursor;
+import android.provider.MediaStore;
 import android.test.ActivityInstrumentationTestCase;
 import android.test.suitebuilder.annotation.LargeTest;
 import android.view.KeyEvent;
-import android.provider.MediaStore;
-import android.content.ContentResolver;
-import android.database.Cursor;
 
 import com.amoseui.music.PlaylistBrowserActivity;
-
 import com.amoseui.music.tests.MusicPlayerNames;
 
 /**
@@ -121,7 +120,7 @@ public class TestPlaylist extends ActivityInstrumentationTestCase<PlaylistBrowse
     public boolean verifyPlaylist(String playlistname) throws Exception {
         Cursor mCursor;
         boolean isEmptyPlaylist = true;
-        String[] cols = new String[] {MediaStore.Audio.Playlists.NAME};
+        String[] cols = new String[]{MediaStore.Audio.Playlists.NAME};
         ContentResolver resolver = getActivity().getContentResolver();
         if (resolver == null) {
             System.out.println("resolver = null");

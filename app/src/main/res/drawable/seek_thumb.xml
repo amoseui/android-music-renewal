@@ -17,18 +17,18 @@
 <!-- This is the thumb on the seek bar. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:state_pressed="true"
-          android:state_window_focused="true"
-          android:drawable="@drawable/now_playing_progress_handle_pressed" />
+    <item android:drawable="@drawable/now_playing_progress_handle_pressed"
+          android:state_pressed="true"
+          android:state_window_focused="true"/>
 
-    <item android:state_focused="true"
-          android:state_window_focused="true"
-          android:drawable="@drawable/now_playing_progress_handle_selected" />
+    <item android:drawable="@drawable/now_playing_progress_handle_selected"
+          android:state_focused="true"
+          android:state_window_focused="true"/>
 
-    <item android:state_selected="true"
-          android:state_window_focused="true"
-          android:drawable="@drawable/now_playing_progress_handle_selected" />
+    <item android:drawable="@drawable/now_playing_progress_handle_selected"
+          android:state_selected="true"
+          android:state_window_focused="true"/>
 
-    <item android:drawable="@drawable/now_playing_progress_handle_normal" />
+    <item android:drawable="@drawable/now_playing_progress_handle_normal"/>
 
 </selector>

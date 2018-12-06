@@ -32,34 +32,41 @@
 
     <!-- App Declaration -->
     <application
-            android:icon="@drawable/app_music"
-            android:label="@string/musicbrowserlabel"
-            android:taskAffinity="android.task.music"
-            android:allowTaskReparenting="true"
-            android:usesCleartextTraffic="true">
+        android:allowTaskReparenting="true"
+        android:icon="@drawable/app_music"
+        android:label="@string/musicbrowserlabel"
+        android:taskAffinity="android.task.music"
+        android:usesCleartextTraffic="true">
 
         <!-- Meta Data -->
-        <meta-data android:name="com.google.android.gms.car.application"
-                   android:resource="@xml/automotive_app_desc"/>
+        <meta-data
+            android:name="com.google.android.gms.car.application"
+            android:resource="@xml/automotive_app_desc"/>
 
         <!-- Main Activity -->
-        <activity android:name="com.amoseui.music.MusicBrowserActivity"
-                  android:theme="@android:style/Theme.NoTitleBar"
-                  android:exported="true">
+        <activity
+            android:name="com.amoseui.music.MusicBrowserActivity"
+            android:exported="true"
+            android:theme="@android:style/Theme.NoTitleBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
+
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
                 <category android:name="android.intent.category.APP_MUSIC"/>
             </intent-filter>
         </activity>
 
-        <activity android:name="com.amoseui.music.AudioPreview" android:theme="@android:style/Theme.Dialog"
-                  android:taskAffinity=""
-                  android:excludeFromRecents="true" android:exported="true" >
+        <activity
+            android:name="com.amoseui.music.AudioPreview"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Dialog">
             <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+
                 <data android:scheme="file"/>
                 <data android:mimeType="audio/*"/>
                 <data android:mimeType="application/ogg"/>
@@ -67,21 +74,25 @@
                 <data android:mimeType="application/itunes"/>
             </intent-filter>
             <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="http" />
+                <action android:name="android.intent.action.VIEW"/>
+
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+
+                <data android:scheme="http"/>
                 <data android:mimeType="audio/*"/>
                 <data android:mimeType="application/ogg"/>
                 <data android:mimeType="application/x-ogg"/>
                 <data android:mimeType="application/itunes"/>
             </intent-filter>
             <intent-filter
-                    android:priority="-1">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="content" />
+                android:priority="-1">
+                <action android:name="android.intent.action.VIEW"/>
+
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+
+                <data android:scheme="content"/>
                 <data android:mimeType="audio/*"/>
                 <data android:mimeType="application/ogg"/>
                 <data android:mimeType="application/x-ogg"/>
@@ -89,14 +100,18 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="com.amoseui.music.MusicPicker"
-                  android:label="@string/music_picker_title" android:exported="true" >
+        <activity
+            android:name="com.amoseui.music.MusicPicker"
+            android:exported="true"
+            android:label="@string/music_picker_title">
             <!-- First way to invoke us: someone asks to get content of
                  any of the audio types we support. -->
             <intent-filter>
-                <action android:name="android.intent.action.GET_CONTENT" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.OPENABLE" />
+                <action android:name="android.intent.action.GET_CONTENT"/>
+
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.OPENABLE"/>
+
                 <data android:mimeType="audio/*"/>
                 <data android:mimeType="application/ogg"/>
                 <data android:mimeType="application/x-ogg"/>
@@ -104,9 +119,11 @@
             <!-- Second way to invoke us: someone asks to pick an item from
                  some media Uri. -->
             <intent-filter>
-                <action android:name="android.intent.action.PICK" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.OPENABLE" />
+                <action android:name="android.intent.action.PICK"/>
+
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.OPENABLE"/>
+
                 <data android:mimeType="vnd.android.cursor.dir/audio"/>
             </intent-filter>
         </activity>
@@ -124,17 +141,19 @@
             recents since this is accessible through a notification when
             appropriate.
         -->
-        <activity android:name="com.amoseui.music.MediaPlaybackActivity"
-                  android:theme="@android:style/Theme.NoTitleBar"
-                  android:label="@string/mediaplaybacklabel"
-                  android:taskAffinity=""
-                  android:launchMode="singleTask"
-                  android:clearTaskOnLaunch="true"
-                  android:excludeFromRecents="true"
-                  android:exported="true">
+        <activity
+            android:name="com.amoseui.music.MediaPlaybackActivity"
+            android:clearTaskOnLaunch="true"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:label="@string/mediaplaybacklabel"
+            android:launchMode="singleTask"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.NoTitleBar">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
+
                 <data android:scheme="content"/>
                 <data android:host="media"/>
                 <data android:mimeType="audio/*"/>
@@ -148,8 +167,9 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="com.amoseui.music.ArtistAlbumBrowserActivity"
-                  android:exported="false">
+        <activity
+            android:name="com.amoseui.music.ArtistAlbumBrowserActivity"
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.PICK"/>
                 <category android:name="android.intent.category.DEFAULT"/>
@@ -157,7 +177,9 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="com.amoseui.music.AlbumBrowserActivity" android:exported="false">
+        <activity
+            android:name="com.amoseui.music.AlbumBrowserActivity"
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.PICK"/>
                 <category android:name="android.intent.category.DEFAULT"/>
@@ -165,17 +187,20 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="com.amoseui.music.TrackBrowserActivity" android:exported="false">
+        <activity
+            android:name="com.amoseui.music.TrackBrowserActivity"
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.PICK"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <data android:mimeType="vnd.android.cursor.dir/track"/>
             </intent-filter>
         </activity>
-mus
-        <activity android:name="com.amoseui.music.PlaylistBrowserActivity"
-                  android:label="@string/musicbrowserlabel"
-                  android:exported="true">
+        mus
+        <activity
+            android:name="com.amoseui.music.PlaylistBrowserActivity"
+            android:exported="true"
+            android:label="@string/musicbrowserlabel">
             <intent-filter>
                 <action android:name="android.intent.action.PICK"/>
                 <category android:name="android.intent.category.DEFAULT"/>
@@ -188,11 +213,12 @@ mus
             </intent-filter>
         </activity>
 
-        <service android:name="com.amoseui.music.MediaPlaybackService"
-                 android:exported="true"
-                 android:label="Android Open Source Music Player">
+        <service
+            android:name="com.amoseui.music.MediaPlaybackService"
+            android:exported="true"
+            android:label="Android Open Source Music Player">
             <intent-filter>
-                <action android:name="android.media.browse.MediaBrowserService" />
+                <action android:name="android.media.browse.MediaBrowserService"/>
             </intent-filter>
         </service>
 

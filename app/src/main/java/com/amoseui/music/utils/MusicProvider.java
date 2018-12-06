@@ -16,8 +16,6 @@
 
 package com.amoseui.music.utils;
 
-import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
-
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -35,9 +33,15 @@ import com.amoseui.music.MusicUtils;
 import com.amoseui.music.R;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 
 /*
 A provider of music contents to the music application, it reads external storage for any music
@@ -45,19 +49,18 @@ files, parse them and
 store them in this class for future use.
  */
 public class MusicProvider {
-    private static final String TAG = "MusicProvider";
-
     // Public constants
     public static final String UNKOWN = "UNKNOWN";
     // Uri source of this track
     public static final String CUSTOM_METADATA_TRACK_SOURCE = "__SOURCE__";
     // Sort key for this tack
     public static final String CUSTOM_METADATA_SORT_KEY = "__SORT_KEY__";
-
+    private static final String TAG = "MusicProvider";
     // Content select criteria
     private static final String MUSIC_SELECT_FILTER = MediaStore.Audio.Media.IS_MUSIC + " != 0";
     private static final String MUSIC_SORT_ORDER = MediaStore.Audio.Media.TITLE + " ASC";
-
+    private final ConcurrentMap<Long, Song> mMusicListById;
+    private final ConcurrentMap<String, Song> mMusicListByMediaId;
     // Categorized caches for music track data:
     private Context mContext;
     // Album Name --> list of Metadata
@@ -67,11 +70,6 @@ public class MusicProvider {
     // Artist Name --> Map of (album name --> album metadata)
     private ConcurrentMap<String, Map<String, MediaMetadata>> mArtistAlbumDb;
     private List<MediaMetadata> mMusicList;
-    private final ConcurrentMap<Long, Song> mMusicListById;
-    private final ConcurrentMap<String, Song> mMusicListByMediaId;
-
-    enum State { NON_INITIALIZED, INITIALIZING, INITIALIZED }
-
     private volatile State mCurrentState = State.NON_INITIALIZED;
 
     public MusicProvider(Context context) {
@@ -135,7 +133,6 @@ public class MusicProvider {
 
     /**
      * Get albums of a certain artist
-     *
      */
     public Iterable<MediaMetadata> getAlbumByArtist(String artist) {
         if (mCurrentState != State.INITIALIZED || !mArtistAlbumDb.containsKey(artist)) {
@@ -146,7 +143,6 @@ public class MusicProvider {
 
     /**
      * Get music tracks of the given album
-     *
      */
     public Iterable<MediaMetadata> getMusicsByAlbum(String album) {
         if (mCurrentState != State.INITIALIZED || !mMusicListByAlbum.containsKey(album)) {
@@ -157,7 +153,6 @@ public class MusicProvider {
 
     /**
      * Get music tracks of the given playlist
-     *
      */
     public Iterable<MediaMetadata> getMusicsByPlaylist(String playlist) {
         if (mCurrentState != State.INITIALIZED || !mMusicListByPlaylist.containsKey(playlist)) {
@@ -187,7 +182,6 @@ public class MusicProvider {
     /**
      * Very basic implementation of a search that filter music tracks which title containing
      * the given query.
-     *
      */
     public Iterable<MediaMetadata> searchMusic(String titleQuery) {
         if (mCurrentState != State.INITIALIZED) {
@@ -197,16 +191,14 @@ public class MusicProvider {
         titleQuery = titleQuery.toLowerCase();
         for (Song song : mMusicListByMediaId.values()) {
             if (song.getMetadata()
-                            .getString(MediaMetadata.METADATA_KEY_TITLE)
-                            .toLowerCase()
-                            .contains(titleQuery)) {
+                    .getString(MediaMetadata.METADATA_KEY_TITLE)
+                    .toLowerCase()
+                    .contains(titleQuery)) {
                 result.add(song.getMetadata());
             }
         }
         return result;
     }
-
-    public interface MusicProviderCallback { void onMusicCatalogReady(boolean success); }
 
     /**
      * Get the list of music tracks from disk and caches the track information
@@ -388,7 +380,7 @@ public class MusicProvider {
         }
         try {
             retriever.setDataSource(mContext, contentUri);
-        } catch(RuntimeException e) {
+        } catch (RuntimeException e) {
             // TODO(amoseui): fix the error
             LogHelper.e(TAG, "setDataSource error: ", musicPath);
             return null;
@@ -489,5 +481,11 @@ public class MusicProvider {
         if (!oldGenre.equals(newGenre)) {
             //            buildListsByGenre();
         }
+    }
+
+    enum State {NON_INITIALIZED, INITIALIZING, INITIALIZED}
+
+    public interface MusicProviderCallback {
+        void onMusicCatalogReady(boolean success);
     }
 }

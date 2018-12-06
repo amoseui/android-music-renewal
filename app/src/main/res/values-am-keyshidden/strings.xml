@@ -17,9 +17,6 @@
 */
  -->
 
-<resources xmlns:android="http://schemas.android.com/apk/res/android"
+<resources
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="create_playlist_create_text_prompt" msgid="2379436619128383935">" አዲሱን ጨዋታዝርዝርዎን ስም ለመስጠት የቁልፍሰሌዳውን ይክፈቱ ወይም ስም ለመስጠት\"<xliff:g id="PLAYLIST">%s</xliff:g>\" አስቀምጥን ይምረጡ።"</string>
-    <string name="rename_playlist_same_prompt" msgid="7777541452078260899">"አዲስ ስም <xliff:g id="PLAYLIST">%s</xliff:g> ጨዋታዝርዝር ለመስጠት የቁልፍሣጥኖችክፈት።"</string>
-    <string name="rename_playlist_diff_prompt" msgid="900422624897120958">" ጨዋታዝርዝር \"<xliff:g id="PLAYLIST">%1$s</xliff:g>\" አዲስ ስም ለመስጠት የቁልፍሰሌዳውን ይክፈቱ ወይም ስም ለመስጠት\"<xliff:g id="NAME">%2$s</xliff:g>\" አስቀምጥን ይምረጡ።"</string>
 </resources>

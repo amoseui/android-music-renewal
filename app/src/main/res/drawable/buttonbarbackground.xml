@@ -16,15 +16,15 @@
 
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:state_focused="true"
-        android:drawable="@drawable/buttonbar_focused" />
+        android:drawable="@drawable/buttonbar_focused"
+        android:state_focused="true"/>
     <item
-        android:state_pressed="true"
-        android:drawable="@drawable/buttonbar_pressed" />
+        android:drawable="@drawable/buttonbar_pressed"
+        android:state_pressed="true"/>
     <item
-        android:state_selected="true"
-        android:drawable="@drawable/buttonbar_active" />
+        android:drawable="@drawable/buttonbar_active"
+        android:state_selected="true"/>
     <item
-        android:state_selected="false"
-        android:drawable="@drawable/buttonbar_inactive" />
+        android:drawable="@drawable/buttonbar_inactive"
+        android:state_selected="false"/>
 </selector>

@@ -36,7 +36,6 @@ import android.view.View;
 import android.widget.TabWidget;
 import android.widget.TextView;
 
-import com.amoseui.music.R;
 import com.amoseui.music.utils.LogHelper;
 import com.amoseui.music.utils.MusicProvider;
 
@@ -47,32 +46,20 @@ import java.util.Locale;
 Static methods useful for activities
  */
 public class MusicUtils {
-    private static final String TAG = LogHelper.makeLogTag(MusicUtils.class);
-
     public static final String TAG_MEDIA_ID = "__MEDIA_ID";
     public static final String TAG_PARENT_ITEM = "__PARENT_ITEM";
     public static final String TAG_WITH_TABS = "__WITH_TABS";
-
-    // A really simple BitmapDrawable-like class, that doesn't do
-    // scaling, dithering or filtering.
-    private static class FastBitmapDrawable extends Drawable {
-        private Bitmap mBitmap;
-        public FastBitmapDrawable(Bitmap b) {
-            mBitmap = b;
-        }
-        @Override
-        public void draw(Canvas canvas) {
-            canvas.drawBitmap(mBitmap, 0, 0, null);
-        }
-        @Override
-        public int getOpacity() {
-            return PixelFormat.OPAQUE;
-        }
-        @Override
-        public void setAlpha(int alpha) {}
-        @Override
-        public void setColorFilter(ColorFilter cf) {}
-    }
+    private static final String TAG = LogHelper.makeLogTag(MusicUtils.class);
+    private static final Object[] sTimeArgs = new Object[5];
+    static int sActiveTabIndex = -1;
+    /*  Try to use String.format() as little as possible, because it creates a
+     *  new Formatter every time you call it, which is very inefficient.
+     *  Reusing an existing Formatter more than tripled the speed of
+     *  makeTimeString().
+     *  This Formatter/StringBuilder are also used by makeAlbumSongsLabel()
+     */
+    private static StringBuilder sFormatBuilder = new StringBuilder();
+    private static Formatter sFormatter = new Formatter(sFormatBuilder, Locale.getDefault());
 
     public static Bitmap resizeBitmap(Bitmap bitmap, Bitmap ref) {
         int w = ref.getWidth();
@@ -149,16 +136,6 @@ public class MusicUtils {
         return songs_albums.toString();
     }
 
-    /*  Try to use String.format() as little as possible, because it creates a
-     *  new Formatter every time you call it, which is very inefficient.
-     *  Reusing an existing Formatter more than tripled the speed of
-     *  makeTimeString().
-     *  This Formatter/StringBuilder are also used by makeAlbumSongsLabel()
-     */
-    private static StringBuilder sFormatBuilder = new StringBuilder();
-    private static Formatter sFormatter = new Formatter(sFormatBuilder, Locale.getDefault());
-    private static final Object[] sTimeArgs = new Object[5];
-
     public static String makeTimeString(Context context, long secs) {
         String durationformat = context.getString(
                 secs < 3600 ? R.string.durationformatshort : R.string.durationformatlong);
@@ -191,8 +168,6 @@ public class MusicUtils {
         ed.putInt(name, value);
         SharedPreferencesCompat.apply(ed);
     }
-
-    static int sActiveTabIndex = -1;
 
     static boolean updateButtonBar(Activity a, int highlight) {
         final TabWidget ll = (TabWidget) a.findViewById(R.id.buttonbar);
@@ -276,7 +251,7 @@ public class MusicUtils {
             case R.id.nowplayingtab:
                 intent = new Intent(a, MediaPlaybackActivity.class);
                 a.startActivity(intent);
-            // fall through and return
+                // fall through and return
             default:
                 return;
         }
@@ -315,5 +290,33 @@ public class MusicUtils {
             }
         }
         nowPlayingView.setVisibility(View.GONE);
+    }
+
+    // A really simple BitmapDrawable-like class, that doesn't do
+    // scaling, dithering or filtering.
+    private static class FastBitmapDrawable extends Drawable {
+        private Bitmap mBitmap;
+
+        public FastBitmapDrawable(Bitmap b) {
+            mBitmap = b;
+        }
+
+        @Override
+        public void draw(Canvas canvas) {
+            canvas.drawBitmap(mBitmap, 0, 0, null);
+        }
+
+        @Override
+        public int getOpacity() {
+            return PixelFormat.OPAQUE;
+        }
+
+        @Override
+        public void setAlpha(int alpha) {
+        }
+
+        @Override
+        public void setColorFilter(ColorFilter cf) {
+        }
     }
 }

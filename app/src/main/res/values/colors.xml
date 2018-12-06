@@ -15,9 +15,6 @@
 -->
 
 <resources>
-    <color name="appwidget_text">#ffffffff</color>
-
-    <color name="transparent">#00000000</color>
 
 </resources>
 

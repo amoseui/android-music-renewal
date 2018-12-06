@@ -26,10 +26,10 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import static com.amoseui.music.utils.MediaIDHelper.MEDIA_ID_MUSICS_BY_ALBUM;
 import static com.amoseui.music.utils.MediaIDHelper.MEDIA_ID_MUSICS_BY_ARTIST;
 import static com.amoseui.music.utils.MediaIDHelper.MEDIA_ID_MUSICS_BY_SEARCH;
 import static com.amoseui.music.utils.MediaIDHelper.MEDIA_ID_MUSICS_BY_SONG;
-import static com.amoseui.music.utils.MediaIDHelper.MEDIA_ID_MUSICS_BY_ALBUM;
 
 /**
  * Utility class to help on queue related tasks.

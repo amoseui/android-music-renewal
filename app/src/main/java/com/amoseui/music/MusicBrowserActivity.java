@@ -21,7 +21,6 @@ import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 
-import com.amoseui.music.R;
 import com.amoseui.music.utils.LogHelper;
 
 public class MusicBrowserActivity extends Activity {
@@ -29,7 +28,8 @@ public class MusicBrowserActivity extends Activity {
 
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 42;
 
-    public MusicBrowserActivity() {}
+    public MusicBrowserActivity() {
+    }
 
     /**
      * Called when the activity is first created.
@@ -40,7 +40,7 @@ public class MusicBrowserActivity extends Activity {
         LogHelper.d(TAG, "onCreate()");
         if (checkSelfPermission(permission.READ_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[] {permission.READ_EXTERNAL_STORAGE},
+            requestPermissions(new String[]{permission.READ_EXTERNAL_STORAGE},
                     MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
             return;
         }
